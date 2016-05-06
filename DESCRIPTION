@@ -1,0 +1,16 @@
+Package: CropPhenology
+Type: Package
+Title: Crop Phenology using timeseries vegetation index data
+Version: 1.0
+Date: 2016-20-04
+Author: Sofanit Araya
+Maintainer: Sofanit Araya <sofanitgirma.araya@adelaide.edu.au>
+Description: Phenologic data is a key environmental parameter to ecological studies. Time sereis data of remote sensing vegetation index have been long used to obtain the vegetation dynamics of crops (Henebry etal. 2013). This package extracts the major phenologic parameters from time series vegetation index data.
+License: GPL (>=2)
+RoxygenNote: 5.0.1
+URL: https://github.com/SofanitAraya/CropPhenology
+Repository: github
+Depends: foreign, raster, sp (>= 1.0-13), maptools, shapefiles, rgdal,Rcpp, rgdal, rgeos
+SystemRequirments: R (> 3.0)
+LazyLoad: yes
+LazyData: yes
