@@ -3,21 +3,22 @@
 #' Phenologic metrics from time series vegetation index data
 #' 
 #' @author  Sofanit Araya
-#' @return  Onset - the NDVI value at the start of the greenness
-#' @return  OnsetT - the time when the greeness of crop starts
-#' @return  MaxV - the annual maximum NDVI during Anthesis stage of crop
-#' @return  MaxT - the time when the maximum NDVI occurs
-#' @return  Offset - the NDVI value at the point before senesence stage of the crop 
-#' @return  OffsetT - the time when the offset occured
-#' @return  GreenUpSlope- the rate of increase in NDVI between onset and Maximum NDVI
-#' @return  BrownDownSlope - The rate of decrease in NDVI from maximum NDVI to sensence
-#' @return  BeforeMaxT - The duration between the Onset and MaxT
-#' @return  AfterMaxT - The duration between the MaxT and OffsetT
+#' @return  OnsetV - NDVI value at the start of continuous positive slope between successive NDVI values between 7th and 12th MODIS imaging periods. It represent early gorth srages (seedling)
+#' @return  OnsetT - MODIS acquisition time between 7th and 12th imaging period when OnsetV is derived. 
+#' @return  MaxV - the annual maximum NDVI, represents full canopy coverage during Anthesis stage
+#' @return  MaxT - the time when the maximum NDVI occurs, represents anthesis/flowering stage
+#' @return  OffsetV - NDVI value measured at the lowest slope below a threshold between successive NDVI values between 19th and 22nd MODIS imaging periods. 
+#' @return  OffsetT - the time when the offset occured, represents time when crop has ripened 
 #' @return  LengthGS- the length of the growing season between Onset and Offset
-#' @return  TINDVIBeforeMax - the integral area under the curve between Onset and Maximum NDVI
-#' @return  TINDVIAfterMax - the integral area under the curve between Maximum NDVI and Offser
-#' @return  TINDVI - the integral area under the curve 
-#' @return  Asymmetry - the difference between AreaBeforeMax and AreaAfterMax 
+#' @return  BeforeMaxT - The duration between the OnsetT and MaxT
+#' @return  AfterMaxT - The duration between the MaxT and OffsetT
+#' @return  GreenUpSlope- The rate at which NDVI increases from the OnsetV to MaxV over the time of the difference between MaxT and OnsetT
+#' @return  BrownDownSlope - The rate at which NDVI decreases from MaxV to OffsetV over the difference between OffsetT and MaxT
+#' @return  TINDVI - The sum of NDVI values attained at each image date within the growing season measured by the area under the NDVI curve.
+#' @return  TINDVIBeforeMax - the integral area under the curve between Onset and Maximum NDVI, indicates the pre-anthesis crop growth.
+#' @return  TINDVIAfterMax - the integral area under the curve between Maximum NDVI and Offset, indicates the post-anthesis growth. 
+#' @return  Asymmetry - the difference between AreaBeforeMax and AreaAfterMax. It measures which part of the growing season attain relatively higher accumulated NDVI values
+#'
 #' @keywords Phenology, remote sensing, satellite image, Time-series
 #' @seealso MultiPointsPlot (Path, N,Id1, Id2...IdN)
 #' @description This function extracts 15 phenologic metrics from Moderate Resolution Imaging Spectroradiometer (MODIS)  time series vegetaion index data, as raster and Ascii files. The function takes path of the vegetation index data and the boolean Value for BolAOI (True- if there is AOI polygon, FALSE- if the parameters are calculated for the whole region).

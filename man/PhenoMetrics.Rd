@@ -12,46 +12,41 @@ PhenoMetrics(RawPath, BolAOI)
 \item{Path}{- Text value - the path where the time series images saved}
 }
 \value{
-Onset - the NDVI value at the start of the greenness
+OnsetV - NDVI value at the start of continuous positive slope between successive NDVI values between 7th and 12th MODIS imaging periods. It represent early gorth srages (seedling)
 
-OnsetT - the time when the greeness of crop starts
+OnsetT - MODIS acquisition time between 7th and 12th imaging period when OnsetV is derived.
 
-MaxV - the annual maximum NDVI during Anthesis stage of crop
+MaxV - the annual maximum NDVI, represents full canopy coverage during Anthesis stage
 
-MaxT - the time when the maximum NDVI occurs
+MaxT - the time when the maximum NDVI occurs, represents anthesis/flowering stage
 
-Offset - the NDVI value at the point before senesence stage of the crop
+OffsetV - NDVI value measured at the lowest slope below a threshold between successive NDVI values between 19th and 22nd MODIS imaging periods.
 
-OffsetT - the time when the offset occured
-
-GreenUpSlope- the rate of increase in NDVI between onset and Maximum NDVI
-
-BrownDownSlope - The rate of decrease in NDVI from maximum NDVI to sensence
-
-BeforeMaxT - The duration between the Onset and MaxT
-
-AfterMaxT - The duration between the MaxT and OffsetT
+OffsetT - the time when the offset occured, represents time when crop has ripened
 
 LengthGS- the length of the growing season between Onset and Offset
 
-TINDVIBeforeMax - the integral area under the curve between Onset and Maximum NDVI
+BeforeMaxT - The duration between the OnsetT and MaxT
 
-TINDVIAfterMax - the integral area under the curve between Maximum NDVI and Offser
+AfterMaxT - The duration between the MaxT and OffsetT
 
-TINDVI - the integral area under the curve
+GreenUpSlope- The rate at which NDVI increases from the OnsetV to MaxV over the time of the difference between MaxT and OnsetT
 
-Asymmetry - the difference between AreaBeforeMax and AreaAfterMax
+BrownDownSlope - The rate at which NDVI decreases from MaxV to OffsetV over the difference between OffsetT and MaxT
+
+TINDVI - The sum of NDVI values attained at each image date within the growing season measured by the area under the NDVI curve.
+
+TINDVIBeforeMax - the integral area under the curve between Onset and Maximum NDVI, indicates the pre-anthesis crop growth.
+
+TINDVIAfterMax - the integral area under the curve between Maximum NDVI and Offset, indicates the post-anthesis growth.
+
+Asymmetry - the difference between AreaBeforeMax and AreaAfterMax. It measures which part of the growing season attain relatively higher accumulated NDVI values
 }
 \description{
 This function extracts 15 phenologic metrics from Moderate Resolution Imaging Spectroradiometer (MODIS)  time series vegetaion index data, as raster and Ascii files. The function takes path of the vegetation index data and the boolean Value for BolAOI (True- if there is AOI polygon, FALSE- if the parameters are calculated for the whole region).
 }
 \details{
-Remote sensing phenology refers to observation of seasonal pattern of vegetation changes using remote sensing vegetation indices (Reed etal. 2009).
-Remotely sensed vegetation phenology has been used for many ecological studies including as an indicator for climate change (Kramer et al.,2000), to estimate agricultural productivity (Hill and Donald, 2003; Sakamoto et al., 2013), regional management for crop type mapping (Brown et al., 2013), as an indicator of soil Plant Available Water Holding Capacity (PAWC) variability across a farm (Araya etal. 2016)  and many more applications. 
-Different methods have been employed to extract phenologic metrics, which include threshold definition (White et al., 1997), decomposition of the vegetation dynamic curve using harmonic analysis (Roerink et al., 2011), taking the first derivative of the smoothed and non-smoothed vegetation index dynamics curves (Moulin et al., 1997) and defining the crossover point of the smoothed and non-smoothed dynamics curves (Hill and Donald, 2003). 
-In this package the phenologic metrics were extracted based on hypothetical correlation of the description of crop physiological stages (Zadoks etal. 1974) with remote sensing vegetation index of the crop.
-
-Further information available at  - www.cropphenology.wix.com/package
+PhenoMetrics function provides the user with 15 phenological based metrics which build upon those available from previous software TIMESAT(Eklundh and Jönsson, 2015)  and PhenoSat  (Rodrigues et al., 2011) and include new metrics suggested by the remote sensing-agricultural based literature.  Furthermore, we have provided the theoretical biological inferences of how these metrics can be used for crop management to reduce the criticisms of the satellite imagery approach. The output allow easy interpretation as it is available in raster image format which is easy to visualize and swimmingly integrate with other data such as precision agriculture dataset, for further processing, such as analysis of regional yield estimate with the pattern of phenologic parameters.
 }
 \examples{
 # EXAMPLE - 1
@@ -68,21 +63,9 @@ PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
 Sofanit Araya
 }
 \references{
-Araya, S., Lyle, G., Lewis, M., Ostendorf, B., 2016. Phenologic metrics derived from MODIS NDVI as indicators for Plant Available Water-holding Capacity. Ecological Indicators 60, 1263-1272.
+Eklundh, L., Jönsson, P., 2015. TIMESAT: A Software Package for Time-Series Processing and Assessment of Vegetation Dynamics, in: Kuenzer, C., Dech, S., Wagner, W. (Eds.), Remote Sensing Time Series: Revealing Land Surface Dynamics. Springer International Publishing, Cham, pp. 141-158.
 
-Brown, J.C., Kastens, J.H., Coutinho, A.C., Victoria, D.d.C., Bishop, C.R., 2013. Classifying multiyear agricultural land use data from Mato Grosso using time-series MODIS vegetation index data. Rem. Sens. of Env/ 130, 39-50.
-
-Hill, M.J., Donald, G.E., 2003. Estimating spatio-temporal patterns of agricultural productivity in fragmented landscapes using AVHRR NDVI time series. Rem.Sen. Env. 84, 367-384.
-
-Moulin, S., Kergoat, L., Viovy, N., Dedieu, G., 1997. Global-scale assessment of vegetation phenology using NOAA/AVHRR satellite measurements. Journal of Climate 10, 1154-1170.
-
-Roerink, G.J., Danes, M.H.G.I., Prieto, O.G., De Wit, A.J.W., Van Vliet, A.J.H., 2011. Deriving plant phenology from remote sensing, 2011 6th Int. Wor. on the, pp. 261-264.
-
-Sakamoto, T., Gitelson, A.A., Arkebauer, T.J., 2013. MODIS-based corn grain yield estimation model incorporating crop phenology information. Rem. Sen.of Env. 131, 215-231.
-
-White, M.A., Thornton, P.E., Running, S.W., 1997. A continental phenology model for monitoring vegetation responses to interannual climatic variability. Glo. Biogeochem. Cyc. 11, 217-234.
-
-Zadoks, J.C., Chang, T.T., Konzak, C.F., 1974. A decimal code for the growth stages of cereals. Weed Research 14, 415-421.
+Rodrigues, A., Marcal, A.R.S., Cunha, M., 2011. PhenoSat : A tool for vegetation temporal analysis from satellite image data, Analysis of Multi-temporal Remote Sensing Images (Multi-Temp), 2011 6th International Workshop on the, pp. 45-48.
 }
 \seealso{
 MultiPointsPlot (Path, N,Id1, Id2...IdN)
