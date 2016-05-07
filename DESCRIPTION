@@ -1,12 +1,11 @@
 Package: CropPhenology
 Type: Package
-Title: Crop Phenology from MODIS timeseries vegetation index data
+Title: Extract crop phenologic metrics from MODIS timeseries vegetation index data
 Version: 1.0
 Date: 2016-20-04
 Author: Sofanit Araya
 Maintainer: Sofanit Araya <sofanitgirma.araya@adelaide.edu.au>
-Description: Phenologic data is a key environmental parameter to ecological studies. Time sereis data of remote sensing vegetation index have been long used to obtain the vegetation dynamics of crops (Henebry etal. 2013). One satellite sensor that has been extensively used to derived phenologic information is the Moderate Resolution Imaging Spectroradiometer (MODIS). This sensor has been used in a number of crop monitoring applications, including crop type mapping and classification (Wardlow et al., 2007; Zhong et al., 2011), regional yield estimation (Kouadio et al., 2012; Sakamoto et al., 2013), and yield forecasting (Bolton and Friedl, 2013). Its moderate resolution and high frequency of acquisition makes it particularly appropriate for characterising crop phenology. Several phenologic products have been developed at different spatial resolutions from the MODIS sensor.
-Description: CropPhenology package extracts 15 phenologic metrics from MODIS time series vegetation index data. It has minimum pre processing of input data and easy interpreatable outputs. 
+Description: CropPhenology-package
 License: GPL (>=2)
 RoxygenNote: 5.0.1
 URL: https://github.com/SofanitAraya/CropPhenology

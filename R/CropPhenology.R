@@ -25,14 +25,10 @@
 #' @param Path - Text value - the path where the time series images saved 
 #' @param BolAOI - Logical value - if there is any area of intererst or not
 #' @export
-#' @details
-#'Remote sensing phenology refers to observation of seasonal pattern of vegetation changes using remote sensing vegetation indices (Reed etal. 2009).
-#'Remotely sensed vegetation phenology has been used for many ecological studies including as an indicator for climate change (Kramer et al.,2000), to estimate agricultural productivity (Hill and Donald, 2003; Sakamoto et al., 2013), regional management for crop type mapping (Brown et al., 2013), as an indicator of soil Plant Available Water Holding Capacity (PAWC) variability across a farm (Araya etal. 2016)  and many more applications. 
-#'Different methods have been employed to extract phenologic metrics, which include threshold definition (White et al., 1997), decomposition of the vegetation dynamic curve using harmonic analysis (Roerink et al., 2011), taking the first derivative of the smoothed and non-smoothed vegetation index dynamics curves (Moulin et al., 1997) and defining the crossover point of the smoothed and non-smoothed dynamics curves (Hill and Donald, 2003). 
-#'In this package the phenologic metrics were extracted based on hypothetical correlation of the description of crop physiological stages (Zadoks etal. 1974) with remote sensing vegetation index of the crop.
+#' @details PhenoMetrics function provides the user with 15 phenological based metrics which build upon those available from previous software TIMESAT(Eklundh and Jönsson, 2015)  and PhenoSat  (Rodrigues et al., 2011) and include new metrics suggested by the remote sensing-agricultural based literature.  Furthermore, we have provided the theoretical biological inferences of how these metrics can be used for crop management to reduce the criticisms of the satellite imagery approach. The output allow easy interpretation as it is available in raster image format which is easy to visualize and swimmingly integrate with other data such as precision agriculture dataset, for further processing, such as analysis of regional yield estimate with the pattern of phenologic parameters.
 #'
-#'Further information available at  - www.cropphenology.wix.com/package
-#'
+#' @references Eklundh, L., Jönsson, P., 2015. TIMESAT: A Software Package for Time-Series Processing and Assessment of Vegetation Dynamics, in: Kuenzer, C., Dech, S., Wagner, W. (Eds.), Remote Sensing Time Series: Revealing Land Surface Dynamics. Springer International Publishing, Cham, pp. 141-158.
+#' @references Rodrigues, A., Marcal, A.R.S., Cunha, M., 2011. PhenoSat : A tool for vegetation temporal analysis from satellite image data, Analysis of Multi-temporal Remote Sensing Images (Multi-Temp), 2011 6th International Workshop on the, pp. 45-48.
 #'
 #' 
 #'@examples
@@ -45,15 +41,6 @@
 #' PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
 #' 
 #' 
-#' @references Araya, S., Lyle, G., Lewis, M., Ostendorf, B., 2016. Phenologic metrics derived from MODIS NDVI as indicators for Plant Available Water-holding Capacity. Ecological Indicators 60, 1263-1272.
-#' @references Brown, J.C., Kastens, J.H., Coutinho, A.C., Victoria, D.d.C., Bishop, C.R., 2013. Classifying multiyear agricultural land use data from Mato Grosso using time-series MODIS vegetation index data. Rem. Sens. of Env/ 130, 39-50.
-#' @references Hill, M.J., Donald, G.E., 2003. Estimating spatio-temporal patterns of agricultural productivity in fragmented landscapes using AVHRR NDVI time series. Rem.Sen. Env. 84, 367-384.
-#' @references Moulin, S., Kergoat, L., Viovy, N., Dedieu, G., 1997. Global-scale assessment of vegetation phenology using NOAA/AVHRR satellite measurements. Journal of Climate 10, 1154-1170.
-#' @references Roerink, G.J., Danes, M.H.G.I., Prieto, O.G., De Wit, A.J.W., Van Vliet, A.J.H., 2011. Deriving plant phenology from remote sensing, 2011 6th Int. Wor. on the, pp. 261-264.
-#' @references Sakamoto, T., Gitelson, A.A., Arkebauer, T.J., 2013. MODIS-based corn grain yield estimation model incorporating crop phenology information. Rem. Sen.of Env. 131, 215-231.
-#' @references White, M.A., Thornton, P.E., Running, S.W., 1997. A continental phenology model for monitoring vegetation responses to interannual climatic variability. Glo. Biogeochem. Cyc. 11, 217-234.
-#' @references Zadoks, J.C., Chang, T.T., Konzak, C.F., 1974. A decimal code for the growth stages of cereals. Weed Research 14, 415-421.
-
 PhenoMetrics<- function (RawPath, BolAOI){
   
   
@@ -659,13 +646,13 @@ PhenoMetrics<- function (RawPath, BolAOI){
 #' @keywords time-series curves
 #' @author Sofanit Araya
 #' 
-#' @details This function allows plotting time series curves from multiple points together in a single plot which helps understanding the growth variability across the field.This inforaiton can further analyzed to provide insight on other environemtal factors.
+#' @details This function allows plotting time series curves from multiple points together in a single plot which helps understanding the growth variability across the field.This inforaiton allow observation of the spatial and temporal crop growth variability across the growth seasons, which provide important information about the environmental factors influencing crop growth and thus potential opportunities for influencing crop management (eg . Araya et al., 2016)
 #' @details The maximum number of pixeles allowed plotting togther are 5 points.
 #' 
 #' @examples
 #' MultiPointsPlot(system.file("extdata/data3", package="CropPhenology"),3,11,114,125)
 #' 
-#' 
+#' @references Araya, S., Lyle, G., Lewis, M., Ostendorf, B., 2016. Phenologic metrics derived from MODIS NDVI as indicators for Plant Available Water-holding Capacity. Ecological Indicators 60, 1263-1272.
 #' 
 #' 
 #' @seealso PhenoMetrics()
