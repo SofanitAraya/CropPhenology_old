@@ -4,25 +4,27 @@
 \alias{PhenoMetrics}
 \title{Phenologic metrics from time series vegetation index data}
 \usage{
-PhenoMetrics(RawPath, BolAOI, Per)
+PhenoMetrics(Path, BolAOI, Percentage)
 }
 \arguments{
+\item{Path}{- Text value - the path where the time series images saved}
+
 \item{BolAOI}{- Logical value - if there is any area of intererst or not}
 
-\item{Path}{- Text value - the path where the time series images saved}
+\item{Percentage}{- Optional Numeric Vlaue - percentage of minimum NDVI value at which the Onset and Offset is defined. The 'Percentage' paramenter is optional; if not provided, a Default value of 10 will be taken.}
 }
 \value{
-OnsetV - NDVI value at the start of continuous positive slope between successive NDVI values between 7th and 12th MODIS imaging periods. It represent early gorth srages (seedling)
+OnsetV - NDVI value at the start of continuous positive slope between successive NDVI values above the user defined percentage threshold. It represent early gorth srages (seedling)
 
-OnsetT - MODIS acquisition time between 7th and 12th imaging period when OnsetV is derived.
+OnsetT - MODIS acquisition time when OnsetV is derived.
 
 MaxV - the annual maximum NDVI, represents full canopy coverage during Anthesis stage
 
 MaxT - the time when the maximum NDVI occurs, represents anthesis/flowering stage
 
-OffsetV - NDVI value measured at the lowest slope below a threshold between successive NDVI values between 19th and 22nd MODIS imaging periods.
+OffsetV - NDVI value measured at the lowest slope below a user defined percentage threshold.
 
-OffsetT - the time when the offset occured, represents time when crop has ripened
+OffsetT - the time when the offsetV derived, represents time when crop has ripened
 
 LengthGS- the length of the growing season between Onset and Offset
 
@@ -55,7 +57,7 @@ PhenoMetrics(system.file("extdata/data1", package="CropPhenology"), FALSE)
  
 # EXAMPLE - 2
  
-PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
+PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE, 15)
 
 
 }

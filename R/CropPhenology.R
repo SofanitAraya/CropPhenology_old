@@ -3,12 +3,12 @@
 #' Phenologic metrics from time series vegetation index data
 #' 
 #' @author  Sofanit Araya
-#' @return  OnsetV - NDVI value at the start of continuous positive slope between successive NDVI values between 7th and 12th MODIS imaging periods. It represent early gorth srages (seedling)
-#' @return  OnsetT - MODIS acquisition time between 7th and 12th imaging period when OnsetV is derived. 
+#' @return  OnsetV - NDVI value at the start of continuous positive slope between successive NDVI values above the user defined percentage threshold. It represent early gorth srages (seedling)
+#' @return  OnsetT - MODIS acquisition time when OnsetV is derived. 
 #' @return  MaxV - the annual maximum NDVI, represents full canopy coverage during Anthesis stage
 #' @return  MaxT - the time when the maximum NDVI occurs, represents anthesis/flowering stage
-#' @return  OffsetV - NDVI value measured at the lowest slope below a threshold between successive NDVI values between 19th and 22nd MODIS imaging periods. 
-#' @return  OffsetT - the time when the offset occured, represents time when crop has ripened 
+#' @return  OffsetV - NDVI value measured at the lowest slope below a user defined percentage threshold. 
+#' @return  OffsetT - the time when the offsetV derived, represents time when crop has ripened 
 #' @return  LengthGS- the length of the growing season between Onset and Offset
 #' @return  BeforeMaxT - The duration between the OnsetT and MaxT
 #' @return  AfterMaxT - The duration between the MaxT and OffsetT
@@ -24,6 +24,8 @@
 #' @description This function extracts 15 phenologic metrics from Moderate Resolution Imaging Spectroradiometer (MODIS)  time series vegetaion index data, as raster and Ascii files. The function takes path of the vegetation index data and the boolean Value for BolAOI (True- if there is AOI polygon, FALSE- if the parameters are calculated for the whole region).
 #' @param Path - Text value - the path where the time series images saved 
 #' @param BolAOI - Logical value - if there is any area of intererst or not
+#' @param Percentage - Optional Numeric Vlaue - percentage of minimum NDVI value at which the Onset and Offset is defined. The 'Percentage' paramenter is optional; if not provided, a Default value of 10 will be taken.
+#' 
 #' @export
 #' @details PhenoMetrics function provides the user with 15 phenological based metrics which build upon those available from previous software TIMESAT(Eklundh and Jönsson, 2015)  and PhenoSat  (Rodrigues et al., 2011) and include new metrics suggested by the remote sensing-agricultural based literature.  Furthermore, we have provided the theoretical biological inferences of how these metrics can be used for crop management to reduce the criticisms of the satellite imagery approach. The output allow easy interpretation as it is available in raster image format which is easy to visualize and swimmingly integrate with other data such as precision agriculture dataset, for further processing, such as analysis of regional yield estimate with the pattern of phenologic parameters.
 #'
@@ -38,10 +40,10 @@
 #'  
 #' # EXAMPLE - 2
 #'  
-#' PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
+#' PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE, 15)
 #' 
 #' 
-PhenoMetrics<- function (RawPath, BolAOI, Per){
+PhenoMetrics<- function (Path, BolAOI, Percentage){
   
   
   #  require('shapefiles')
@@ -52,8 +54,8 @@ PhenoMetrics<- function (RawPath, BolAOI, Per){
   require("rgeos")
   require("grid")
   
-  setwd(RawPath)
-  raDir=dir(path=RawPath, pattern = c(".img$|.tif$"))
+  setwd(Path)
+  raDir=dir(path=Path, pattern = c(".img$|.tif$"))
   FileLen=length(raDir)
   q=1
   qon=1
@@ -74,18 +76,18 @@ PhenoMetrics<- function (RawPath, BolAOI, Per){
     shp=rasterToPolygons((ra*0), dissolve=TRUE)
   }
   
-  if (missing(Per)) {
+  if (missing(Percentage)) {
     print ("The default value, 10%, will be applied")
-    Per=20
+    Percentage=20
   }
   
-  if (!is.numeric(Per)){
+  if (!is.numeric(Percentage)){
     stop("Percentage value for Onset and Offset should be numeric")
   }
-  if (Per<0){
+  if (Percentage<0){
     stop("Negative Onset-Offset percentage specified")
   }
-  if (Per==0){
+  if (Percentage==0){
     stop("Onset-Offset percentage should be greated than 0")
   }
   
@@ -190,7 +192,7 @@ PhenoMetrics<- function (RawPath, BolAOI, Per){
       j=j-1
       f=f+1
     }
-    ratio=Per/100
+    ratio=Percentage/100
     min1=min (AnnualTS[1:Max_T])
     min2=min(AnnualTS[Max_T:(FileLen-1)])
     range1=min1+(ratio*min1) #to get 10% of the min before Max
