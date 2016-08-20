@@ -41,7 +41,7 @@
 #' PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
 #' 
 #' 
-PhenoMetrics<- function (RawPath, BolAOI){
+PhenoMetrics<- function (RawPath, BolAOI, Per){
   
   
   #  require('shapefiles')
@@ -62,6 +62,7 @@ PhenoMetrics<- function (RawPath, BolAOI){
   par(mfrow=c(1,1))
   par(mar=c(3.5, 2.5, 2.5, 5.5))
   s=1
+  Enter=FALSE
   if (BolAOI == TRUE){
     BolAOI=dir(pattern="*.shp$")
     shp=readShapePoly(BolAOI)
@@ -73,12 +74,26 @@ PhenoMetrics<- function (RawPath, BolAOI){
     shp=rasterToPolygons((ra*0), dissolve=TRUE)
   }
   
+  if (missing(Per)) {
+    print ("The default value, 10%, will be applied")
+    Per=20
+  }
+  
+  if (!is.numeric(Per)){
+    stop("Percentage value for Onset and Offset should be numeric")
+  }
+  if (Per<0){
+    stop("Negative Onset-Offset percentage specified")
+  }
+  if (Per==0){
+    stop("Onset-Offset percentage should be greated than 0")
+  }
   
   i=1
   try=0
   
   if (FileLen==0){ stop ('No image file obtained in the path mensioned - Check your file type')}
-  if (FileLen<23){ stop ('The number of images not complete cover the season - check your image files')}
+  #  if (FileLen<23){ stop ('The number of images not complete cover the season - check your image files')}
   
   while (i<(FileLen+1)) {
     ras=raster(raDir[i])
@@ -132,7 +147,7 @@ PhenoMetrics<- function (RawPath, BolAOI){
       q=q+1
     }
     
-    #print (AnnualTS)
+    print (AnnualTS)
     cordinate=0
     cordinate[1]=cor[s,1]
     cordinate[2]=cor[s,2]
@@ -153,483 +168,462 @@ PhenoMetrics<- function (RawPath, BolAOI){
       }
       qmax=qmax+1
     }
+    Max_TF=Max_T
     Max_Value[,"value"][s]=max
-    Max_Time[,"value"][s]=Max_T    
+    Max_Time[,"value"][s]=Max_TF    
     
     
     #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     #                                                  Onset 
     #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    
+    onsetT=0
+    onsetV=0
     # successive slops b/n  points
-    j=7
-    slop=(AnnualTS[j+1]-AnnualTS[j])
-    slop=as.matrix(slop)
-    f=1
-    while (j<12){
-      slop[f]=(AnnualTS[j+1]-AnnualTS[j])
-      j=j+1
+    j=Max_T
+    slopon=(AnnualTS[j]-AnnualTS[j-1])
+    slopon=as.matrix(slopon)
+    f=2
+
+    
+    while(j >2){
+      slopon[f]=(AnnualTS[j-1]-AnnualTS[j-2])
+      j=j-1
       f=f+1
     }
-    min1=mean(AnnualTS[5:6]) #minimum before the amplitude
-    min2=mean(AnnualTS[22:23]) #minimum after the amplitude
-    range1=0.1*min1 #to get 20% of the min before Max
-    range2=0.1*min2#to get 20% of the min after Max
-    trsh1=min(AnnualTS[5:6])+range1 # to get 20% more greenness than the min before max
-    trsh2=min(AnnualTS[22:23])+range2 # to get 20% more greenness than the min after max
-    #------------------------------------------------------------------------------------------------------------------------------
-    # last -ve slop
-    len=length(slop)
-    last=slop[len]
-    i=len
+    ratio=Per/100
+    min1=min (AnnualTS[1:Max_T])
+    min2=min(AnnualTS[Max_T:(FileLen-1)])
+    range1=min1+(ratio*min1) #to get 10% of the min before Max
+    range2=min2+(ratio*min2)#to get 10% of the min after Max
+    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+    #                            Last -ve slope- onset
+    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
+    len=length(slopon)
+    last=slopon[1]
+    i=1
+    #i=len
     ls=0
-    while(i<len+1 & i>1){
-      if (last<0){
+    while((i<(len+1)) & (i>0)){
+      if (last<0.001){
         #print(last)
-        if (last< (-0.01)){
+        if (last< 0.001){
           #print(last)
           ls=i
           break
         }
         quick=i
       }
-      i=i-1
-      last=slop[i]
+      i=i+1
+      last=slopon[i]
     }
-    #------------------------------------------------------------------------------------------------------------------------------
-    #maximum of the post negetive records
-    R_max=0
-    max_r=0
-    Em=0
-    k=7 # to check the early point where the trushold reached
-    if (ls==0){ #for all +ve slop
-      touched=FALSE
-      while (k<12){
-        if (AnnualTS[k]>trsh1){
-          #then check for trsh1
-          if (slop[k-6]>=0){
-            Em=k
-            touched=TRUE
-            break
-          }
-          if (slop[k-6]<0){
-            Em=k+1
-            touched=TRUE
-            break
-            
-          }
-          touched=TRUE
-        }
-        
-        k=k+1
-      }
-      if (touched==FALSE){
-        c=1
-        while(c<6){
-          if (slop[c]== max(slop)){
-            Em=c+6
-          }
-          c=c+1
-        }
-      }
-    }
-    # ls=5 =>  the last slope (i.e b/n 11 and 12 is decreasing), 
-    #in this case check for the previous and next slope if it is not continue decreasing but was decreasing before that then 
-    # the onset is at image 12 
-    
-    if (ls==5){
-      if ((slop[ls-1]<0) & ((AnnualTS[13]-AnnualTS[12])>0)){
-        Em=12
-      }
-      if ((slop[ls-1]<0) & ((AnnualTS[13]-AnnualTS[12])<0)){
-        if (AnnualTS[10]>trsh1){Em=10 }
-        if (AnnualTS[10]<trsh1){Em=13}
-      }
-      
-      if (slop[ls-1]>0){
-        k=7
-        while (k<12){
-          if ((AnnualTS[k]>trsh1) & (slop[k-6]>0)){
-            Em=k
-            break
-          }
-          k=k+1
-        }
-      }
-      if (Em==0){ Em=12} # if incase the posetive slop in before 11 like -,-,-,+,- slope
-    }
+    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#    print (slopon)
+#    print(ls)
+#    print (Max_T)
+#    print(max)
+#    print(range1)
+ #   print(range2)
     
     
-    if ((ls<5)& (ls>2)){
-      
-      if (slop[ls-1]<(-0.01)){ # if the previous is -ve, i.e deep decreament
-        Em=ls+7
-      }
-      touched=FALSE
-      if (slop[ls-1]>(-0.01)){ #if it is minor decrease on genneral +ve trend
-        k=7
-        while (k<12){
-          if (AnnualTS[k]>trsh1){ # check pt where the trushold passed
-            if (slop[k-6]>=0){
-              Em=k
-              touched=TRUE
-              break
-            }
-            if (slop[k-6]<0){
-              Em=k+1
-              touched=TRUE
-              break
-            }
-            touched=TRUE
-          }
-          k=k+1
-        }
-        if (touched==FALSE){
-          Em=ls+6
-        }
-      }
-    }
-    if((ls==1) | (ls==2)){ #if the -ve slope is at the start
-      k=ls+7
-      tk=1
-      while (k<12){
-        if (AnnualTS[k]>trsh1){ # check the point where trsh passed
-          g=k-6
-          if (slop[k-6]>(-0.01)){ # check if the next slope is negetive- if posetive take that as onset if not keep checking
-            Em=k
-            tk=tk+1
-            break
-          }
+    
+    if (ls==0){ #if only the growing season is presented and only increasing
+      k=1
+      Checked= FALSE
+      while (k<Max_T){
+        if (AnnualTS[k]< range1){
+          onsetT=k
+          onsetV=AnnualTS[k]
+          Checked=TRUE
         }
         k=k+1
       }
-      if (tk==1){ Em=12 } # if the slops gets all -ve after ls -  the last point will be taken as Onset
-    }
-    #------------------------------------------------------------------------------------------------------------------------------
-    t=((AnnualTS[Em]-trsh1)/(AnnualTS[Em]-AnnualTS[Em-1]))
-    if (t==0){
-      Onset=Em  
-    }
-    if (((t>0) & (AnnualTS[Em]-AnnualTS[Em-1])>0 &(Em>t))){
-      onset=Em-t
-      onsetV= ((AnnualTS[Em]-AnnualTS[Em-1])*(1-t))+AnnualTS[Em-1]
-    }
-    
-    if ((t<0) | (AnnualTS[Em]-AnnualTS[Em-1])<0){
-      onset=Em
-      onsetV=AnnualTS[Em]
-    }
-    if (Em>t){
-      onset=Em
-    }
-    #print (Em)
-    #print (trsh1)
-    
-    
-    #==============================
-    onset=Em
-    onsetV=AnnualTS[Em]
-    
-    #print (Max_T)
-    
-    if (onset > (Max_T)){
-      onset=7
-    }
-    
-    Onset_Value[,"value"][s]=onsetV
-    Onset_Time[,"value"][s]=onset
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    #                                                  Offset
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    tm=min(AnnualTS[22], AnnualTS[23])
-    trsh2=(tm+(tm/10))
-    ofslp=AnnualTS[19]-AnnualTS[18]    
-    crp=TRUE
-    ofslp=matrix(ofslp)
-    ofslp[2]=AnnualTS[20]-AnnualTS[19]
-    ofslp[3]=AnnualTS[21]-AnnualTS[20]
-    ofslp[4]=AnnualTS[22]-AnnualTS[21]
-    ofslp[5]=AnnualTS[23]-AnnualTS[22]
-    
-    minof=abs(ofslp[1])
-    
-    ofc=1
-    oft=18
-    
-    while (ofc<5) {
-      if (minof>abs(ofslp[ofc])){
-        minof=ofslp[ofc]
-        oft=ofc+17
+      if (Checked==FALSE){
+        onsetT=1
+        onsetV=AnnualTS[1]
       }
-      ofc=ofc+1
     }
     
-    i=oft
-    while (i<23){
-      if ((AnnualTS[i]<trsh2)){
-        offsetT=i
-        offsetV=AnnualTS[i]
+    
+    if (ls>0){
+      ko=Max_T-ls
+      if (AnnualTS[ko]<range1){
+        onsetT=ko
+        onsetV=AnnualTS[ko]
+      }
+      if (AnnualTS[ko]>range1){
+        p=ls
+        Enter=FALSE
+        while (p<(length(slopon)+1)){
+          if (AnnualTS[Max_T-p]<range1){
+            onsetT=Max_T-p
+            onsetV=AnnualTS[Max_T-p]
+            Enter=TRUE
+            break
+          }
+          p=p+1    
+        }
+      }
+    }
+  
+      
+
+
+if (Enter==FALSE){
+  p=Max_T-ls
+  while (p<Max_T){
+    if (AnnualTS[p]<range1){
+      onsetT=p
+      onsetV=AnnualTS[p]
+    }
+    p=p+1
+  }
+}
+
+onsetTF=onsetT
+#print (onsetV)
+#print(onsetT)
+
+
+Onset_Value[,"value"][s]=onsetV
+Onset_Time[,"value"][s]=onsetTF
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#                                                  Offset
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+offsetT=0
+offsetV=0
+crp=TRUE
+z=Max_T+1
+slopof=(AnnualTS[Max_T+1]-AnnualTS[Max_T])
+slopof=as.matrix(slopof)
+y=2
+
+while (z<(length(AnnualTS))){
+  slopof[y]=(AnnualTS[z+1]-AnnualTS[z])
+  z=z+1
+  y=y+1
+}
+
+print (slopof)
+print(range2)
+
+lenof=length(slopof)
+lastof=slopof[lenof]
+
+i=1
+#i=len
+lsof=0
+
+
+while(i<lenof+1){
+  if (lastof>(-0.01)){
+    #print(last)
+    if (lastof> (-0.01)){
+      #print(last)
+      lsof=i
+      break
+    }
+quick=i
+  }
+i=i+1
+lastof=slopof[i]
+}
+
+
+
+if (lsof==0){ #if only the growing season is presented and only increasing
+  k=Max_T+1
+  Checked= FALSE
+  while (k<(length(AnnualTS)+1)){
+    if (AnnualTS[k]< range2){
+      offsetT=k
+      offsetV=AnnualTS[k]
+      Checked=TRUE
+    }
+    k=k+1
+  }
+  if (Checked==FALSE){
+    offsetT=length(AnnualTS)
+    offsetV=AnnualTS[offsetT]
+  }
+}
+
+kof=(Max_T+lsof-1)
+if (lsof>0){
+  if (AnnualTS[kof]<range2){
+    offsetT=kof
+    offsetV=AnnualTS[kof]
+  }
+  if (AnnualTS[kof]>range2){
+    p=lsof
+    Enter=FALSE
+    while (p<length(slopof)){
+      if ((slopof[p]>(-0.01)) & (AnnualTS[Max_T+p-1]<range2)){
+        offsetT=Max_T+p-1
+        offsetV=AnnualTS[Max_T+p-1]
+        Enter=TRUE
         break
       }
-      i=i+1
+      p=p+1    
     }
-    
-    if ((max-trsh2)<0.05) {
-      crp=FALSE
-      offsetT=0
-      offsetV=0
-    }
-    if (offsetT>20){
-      if (ofslp[3]>0){
-        OffsetT=22
-        offsetV=AnnualTS[22]
-        
-      }
-      if (ofslp[2]>0){
-        OffsetT=21
-        offsetV=AnnualTS[21]
-        
-      }
-      if (ofslp[1]>0){
-        OffsetT=20
-        offsetV=AnnualTS[20]
-      }
-      
-    }
-    
-    
-    Offset_Value[,"value"][s]=offsetV
-    Offset_Time[,"value"][s]= offsetT
-    
-    
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    #                                                Area
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    
-    
-    St=abs(round (onset))
-    Ed=abs(round(offsetT))
-    Area=0
-    start=St
-    end=Ed+1
-    mx=Max_T
-    
-    if (St<=0) {
-      start=9
-      start1=9
-      start2=9
-    }
-    
-    if (crp==FALSE){
-      Area=0
-      Area1=0
-      Area2=0
-    }
-    while (start<end){
-      Area=Area+AnnualTS[start]
-      start=start+1
-    }
-    #print (Area)
-    
-    Area_Total[,"value"][s]=Area
-    
-    
-    start1=St
-    Area1=AnnualTS[start1]/2
-    start1=start1+1
-    while (start1<mx){
-      Area1=Area1+AnnualTS[start1]
-      start1=start1+1
-    }
-    Area1=Area1+AnnualTS[mx]/2
-    #print (Area1)
-    if (Area==0){ Area1=0}
-    Area_Before[,"value"][s]=Area1
-    
-    Area2=AnnualTS[mx]/2
-    start2=mx+1
-    while (start2<(end)){
-      Area2=Area2+AnnualTS[start2]
-      start2=start2+1
-    }
-    Area2=Area2+AnnualTS[Ed]/2
-    #print (Area2)
-    if (Area==0){ Area2=0}
-    Area_After[,"value"][s]=Area2
-    
-    Asy=Area1-Area2
-    Asymmetry[,"value"][s]=Asy
-    
-    s=s+1
-    
   }
-  
-  dir.create("Metrics")
-  setwd(paste(getwd(), "Metrics", sep="/"))
-  
-  
-  write.table(Area_Total, "TINDVI.txt")
-  write.table(Area_After, "TINDVIAfterMax.txt")
-  write.table(Area_Before, "TINDVIBeforeMax.txt")
-  
-  write.table(Max_Value, "Max_V.txt")
-  write.table(Max_Time, "Max_T.txt")
-  
-  write.table(Offset_Value, "Offset_V.txt")
-  write.table(Offset_Time, "Offset_T.txt")
-  
-  write.table(Onset_Value, "Onset_V.txt")
-  write.table(Onset_Time, "Onset_T.txt")
-  
-  write.table(Asymmetry, "Asymmetry.txt")
-  ###===================================================================================================
-  #Defining secondary metrics
-  
-  BeforeMaxT[,"value"]=Max_Time[,"value"]-Onset_Time[,"value"]
-  write.table(BeforeMaxT, "BeforeMaxT.txt")
-  
-  AfterMaxT[,"value"]=Offset_Time[,"value"]-Max_Time[,"value"]
-  write.table(AfterMaxT, "AfterMaxT.txt")
-  
-  #BrownDownSlope=Max_Time
-  BrownDownSlope[,"value"]=(Max_Value[,"value"]-Offset_Value[,"value"])/(Offset_Time[,"value"]-Max_Time[,"value"])
-  write.table(BrownDownSlope, "BrownDownSlope.txt")
-  
-  #GreenUpSlope=Max_Time
-  GreenUpSlope[,"value"]=(Max_Value[,"value"]-Onset_Value[,"value"])/(Max_Time[,"value"]-Onset_Time[,"value"])
-  write.table(GreenUpSlope, "GreenUpSlope.txt")
-  
-  
-  #LengthGS=Max_Time
-  LengthGS[,"value"]=(Offset_Time[,"value"]-Onset_Time[,"value"])
-  write.table(LengthGS, "LengthGS.txt")
-  
-  #LengthGS=Max_Time
-  Amplitude[,"value"]=(Max_Value[,"value"]-((Onset_Value[,"value"]+Offset_Value[,"value"])/2))
-  write.table(Amplitude, "Amplitude.txt")
-  
-  ###===================================================================================================
-  par(mfrow=c(2,2))
-  
-  names(AllP)=Hd
-  write.csv(AllP, "AllPixels.txt")
-  
-  
-  OT=rasterFromXYZ(Onset_Time)
-  crs(OT)<-crs(ras)
-  brk=seq(6,13, by=0.01)
-  nbrk=length(brk)
-  plot(OT$value, main="OnsetT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(6,13,by=2), labels=seq(6,13,by=2)), zlim=c(6,13))
-  writeRaster(OT$value, "OnsetT.img", overwrite=TRUE)
-  
-  OV=rasterFromXYZ(Onset_Value)
-  brk=seq(0.1,0.6, by=0.001)
-  nbrk=length(brk)
-  crs(OV)<-crs(ras)
-  plot(OV$value, main="OnsetV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0.1,0.6,by=0.2), labels=seq(0.1,0.6,by=0.2)), zlim=c(0.1,0.6))
-  writeRaster(OV$value, "OnsetV.img", overwrite=TRUE)
-  
-  MT=rasterFromXYZ(Max_Time)
-  crs(MT)<-crs(ras)
-  brk=seq(8,19, by=1)
-  nbrk=length(brk)
-  lblbrk=brk
-  plot(MT$value, main="MaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(8,19,by=2), labels=seq(8,19,by=2)),zlim=c(8,19))
-  writeRaster(MT$value, "MaxT.img", overwrite=TRUE)
-  
-  
-  MV=rasterFromXYZ(Max_Value)
-  crs(MV)<-crs(ras)
-  brk=seq(0.2,1, by=0.001)
-  nbrk=length(brk)
-  plot(MV$value, main="MaxV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0.2,1,by=0.2), labels=seq(0.2,1,by=0.2)), zlim=c(0.2,1))
-  writeRaster(MV$value, "MaxV.img", overwrite=TRUE)
-  
-  OFT=rasterFromXYZ(Offset_Time)
-  crs(OFT)<-crs(ras)
-  brk=seq(16,23, by=0.01)
-  nbrk=length(brk)
-  plot(OFT$value, main="OffsetT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(16,23,by=2), labels=seq(16,23,by=2)), zlim=c(16,23))
-  writeRaster(OFT$value, "OffsetT.img", overwrite=TRUE)
-  
-  OFV=rasterFromXYZ(Offset_Value)
-  crs(OFV)<-crs(ras)
-  brk=seq(0,0.4, by=0.001)
-  nbrk=length(brk)
-  plot(OFV$value, main="OffsetV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.4,by=0.1), labels=seq(0,0.4,by=0.1)), zlim=c(0,0.4))
-  writeRaster(OFV$value, "OffsetV.img", overwrite=TRUE)
-  
-  GUS=rasterFromXYZ(GreenUpSlope)
-  crs(GUS)<-crs(ras)
-  brk=seq(0,0.25, by=0.00001)
-  nbrk=length(brk)
-  plot(GUS$value, main="GreenUpSlope", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.25,by=0.1), labels=seq(0,0.25,by=0.1)),zlim=c(0,0.25))
-  writeRaster(GUS$value, "GreenUpSlope.img", overwrite=TRUE)
-  
-  BDS=rasterFromXYZ(BrownDownSlope)
-  crs(BDS)<-crs(ras)
-  brk=seq(0,0.25, by=0.00001)
-  nbrk=length(brk)
-  plot(BDS$value, main="BrownDownSlope", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.25,by=0.1), labels=seq(0,0.25,by=0.1)),zlim=c(0,0.25))
-  writeRaster(BDS$value, "BrownDownSlope.img", overwrite=TRUE)
-  
-  BefMaxT=rasterFromXYZ(BeforeMaxT)
-  crs(BefMaxT)<-crs(ras)
-  brk=seq(0,12, by=0.01)
-  nbrk=length(brk)
-  plot(BefMaxT$value, main="BeforeMaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,12,by=2), labels=seq(0,12,by=2)), zlim=c(0,12))
-  writeRaster(BefMaxT$value, "BeforeMaxT.img", overwrite=TRUE)
-  
-  AftMaxT=rasterFromXYZ(AfterMaxT)
-  crs(AftMaxT)<-crs(ras)
-  brk=seq(0,12, by=0.01)
-  nbrk=length(brk)
-  plot(AftMaxT$value, main="AfterMaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,12,by=2), labels=seq(0,12,by=2)), zlim=c(0,12))
-  writeRaster(AftMaxT$value, "AfterMaxT.img", overwrite=TRUE)
-  
-  Len=rasterFromXYZ(LengthGS)
-  crs(Len)<-crs(ras)
-  brk=seq(6,17, by=0.1)
-  nbrk=length(brk)
-  writeRaster(Len$value, "LengthGS.img", overwrite=TRUE)
-  plot(Len$value, main="LengthGS", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(6,17,by=2), labels=seq(6,17,by=2)), zlim=c(6,17))
-  
-  AA=rasterFromXYZ(Area_After)
-  crs(AA)<-crs(ras)
-  brk=seq(0,6, by=0.0001)
-  nbrk=length(brk)
-  plot(AA$value, main="TINDVIAfterMax", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,6,by=2), labels=seq(0,6,by=2)), zlim=c(0,6))
-  writeRaster(AA$value, "TINDVIAfterMax.img", overwrite=TRUE)
-  
-  AB=rasterFromXYZ(Area_Before)
-  crs(AB)<-crs(ras)
-  brk=seq(0,6, by=0.0001)
-  nbrk=length(brk)
-  plot(AB$value, main="TINDVIBeforeMax", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,6,by=2), labels=seq(0,6,by=2)), zlim=c(0,6))
-  writeRaster(AB$value, "TINDVIBeforeMax.img", overwrite=TRUE)
-  
-  
-  AT=rasterFromXYZ(Area_Total)
-  crs(AT)<-crs(ras)
-  brk=seq(0,8, by=0.001)
-  nbrk=length(brk)
-  plot(AT$value, main="TINDVI", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,8,by=2), labels=seq(0,8,by=2)), zlim=c(0,8))
-  writeRaster(AT$value, "TINDVI.img", overwrite=TRUE)
-  
-  
-  As=rasterFromXYZ(Asymmetry)
-  crs(As)<-crs(ras)
-  brk=seq(-6,6, by=0.0001)
-  nbrk=length(brk)
-  plot(As$value, main="Asymmetry", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(-6.0,6.0,by=3), labels=seq(-6.0,6.0,by=3)), zlim=c(-6,6))
-  writeRaster(As$value, "Asymmetry.img", overwrite=TRUE)
-  
-  
-  ##########################====================================##########################
-  
-  return("*********************Output file saved at working directory*************************")
-  
-  ##########################====================================##########################
+  if (Enter==FALSE){
+    p=Max_T+lsof-1
+    while (p<(length(AnnualTS)+1)){
+      if (AnnualTS[p]<range2){
+        offsetT=p
+        offsetV=AnnualTS[p]
+      }
+      p=p+1
+    }
+  }
+}
+
+if ((max-offsetV)==0) {
+  crp=FALSE
+  offsetT=length(AnnualTS)
+  offsetV=AnnualTS[offsetT]
+}
+
+print (lsof)
+
+print (offsetV)
+print(offsetT)
+offsetTF=offsetT
+
+Offset_Value[,"value"][s]=offsetV
+Offset_Time[,"value"][s]= offsetTF
+
+
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#                                                Area
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+St=abs(round (onsetT))
+Ed=abs(round(offsetT))
+Area=0
+start=St
+end=Ed+1
+mx=Max_T
+
+if (St<=0) {
+  start=9
+  start1=9
+  start2=9
+}
+
+if (crp==FALSE){
+  Area=0
+  Area1=0
+  Area2=0
+}
+while (start<end){
+  Area=Area+AnnualTS[start]
+  start=start+1
+}
+#print (Area)
+
+Area_Total[,"value"][s]=Area
+
+
+start1=St
+Area1=AnnualTS[start1]/2
+start1=start1+1
+while (start1<mx){
+  Area1=Area1+AnnualTS[start1]
+  start1=start1+1
+}
+Area1=Area1+(AnnualTS[mx]/2)
+
+print(onsetT)
+print (Area1)
+if (onsetT==0){ Area1=0}
+if (Area==0){ Area1=0}
+Area_Before[,"value"][s]=Area1
+
+Area2=AnnualTS[mx]/2
+start2=mx+1
+while (start2<(end)){
+  Area2=Area2+AnnualTS[start2]
+  start2=start2+1
+}
+Area2=Area2+AnnualTS[Ed]/2
+#print (Area2)
+if (Area==0){ Area2=0}
+Area_After[,"value"][s]=Area2
+
+Asy=Area1-Area2
+Asymmetry[,"value"][s]=Asy
+
+s=s+1
+
+  }
+
+dir.create("Metrics")
+setwd(paste(getwd(), "Metrics", sep="/"))
+
+
+write.table(Area_Total, "TINDVI.txt")
+write.table(Area_After, "TINDVIAfterMax.txt")
+write.table(Area_Before, "TINDVIBeforeMax.txt")
+
+write.table(Max_Value, "Max_V.txt")
+write.table(Max_Time, "Max_T.txt")
+
+write.table(Offset_Value, "Offset_V.txt")
+write.table(Offset_Time, "Offset_T.txt")
+
+write.table(Onset_Value, "Onset_V.txt")
+write.table(Onset_Time, "Onset_T.txt")
+
+write.table(Asymmetry, "Asymmetry.txt")
+###===================================================================================================
+#Defining secondary metrics
+
+BeforeMaxT[,"value"]=Max_Time[,"value"]-Onset_Time[,"value"]
+write.table(BeforeMaxT, "BeforeMaxT.txt")
+
+AfterMaxT[,"value"]=Offset_Time[,"value"]-Max_Time[,"value"]
+write.table(AfterMaxT, "AfterMaxT.txt")
+
+#BrownDownSlope=Max_Time
+BrownDownSlope[,"value"]=(Max_Value[,"value"]-Offset_Value[,"value"])/(Offset_Time[,"value"]-Max_Time[,"value"])
+write.table(BrownDownSlope, "BrownDownSlope.txt")
+
+#GreenUpSlope=Max_Time
+GreenUpSlope[,"value"]=(Max_Value[,"value"]-Onset_Value[,"value"])/(Max_Time[,"value"]-Onset_Time[,"value"])
+write.table(GreenUpSlope, "GreenUpSlope.txt")
+
+
+#LengthGS=Max_Time
+LengthGS[,"value"]=(Offset_Time[,"value"]-Onset_Time[,"value"])
+write.table(LengthGS, "LengthGS.txt")
+
+#LengthGS=Max_Time
+Amplitude[,"value"]=(Max_Value[,"value"]-((Onset_Value[,"value"]+Offset_Value[,"value"])/2))
+write.table(Amplitude, "Amplitude.txt")
+
+###===================================================================================================
+par(mfrow=c(2,2))
+
+names(AllP)=Hd
+write.csv(AllP, "AllPixels.txt")
+
+
+OT=rasterFromXYZ(Onset_Time)
+crs(OT)<-crs(ras)
+brk=seq(2,16, by=0.01)
+nbrk=length(brk)
+plot(OT$value, main="OnsetT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(2,16,by=2), labels=seq(2,16,by=2)), zlim=c(2,16))
+writeRaster(OT$value, "OnsetT.img", overwrite=TRUE)
+OV=rasterFromXYZ(Onset_Value)
+brk=seq(0.1,0.6, by=0.001)
+nbrk=length(brk)
+crs(OV)<-crs(ras)
+plot(OV$value, main="OnsetV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0.1,0.6,by=0.2), labels=seq(0.1,0.6,by=0.2)), zlim=c(0.1,0.6))
+writeRaster(OV$value, "OnsetV.img", overwrite=TRUE)
+
+MT=rasterFromXYZ(Max_Time)
+crs(MT)<-crs(ras)
+brk=seq(8,19, by=1)
+nbrk=length(brk)
+lblbrk=brk
+plot(MT$value, main="MaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(8,19,by=2), labels=seq(8,19,by=2)),zlim=c(8,19))
+writeRaster(MT$value, "MaxT.img", overwrite=TRUE)
+
+
+MV=rasterFromXYZ(Max_Value)
+crs(MV)<-crs(ras)
+brk=seq(0.2,1, by=0.001)
+nbrk=length(brk)
+plot(MV$value, main="MaxV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0.2,1,by=0.2), labels=seq(0.2,1,by=0.2)), zlim=c(0.2,1))
+writeRaster(MV$value, "MaxV.img", overwrite=TRUE)
+
+OFT=rasterFromXYZ(Offset_Time)
+crs(OFT)<-crs(ras)
+brk=seq(16,23, by=0.01)
+nbrk=length(brk)
+plot(OFT$value, main="OffsetT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(16,23,by=2), labels=seq(16,23,by=2)), zlim=c(16,23))
+writeRaster(OFT$value, "OffsetT.img", overwrite=TRUE)
+
+OFV=rasterFromXYZ(Offset_Value)
+crs(OFV)<-crs(ras)
+brk=seq(0,0.4, by=0.001)
+nbrk=length(brk)
+plot(OFV$value, main="OffsetV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.4,by=0.1), labels=seq(0,0.4,by=0.1)), zlim=c(0,0.4))
+writeRaster(OFV$value, "OffsetV.img", overwrite=TRUE)
+
+GUS=rasterFromXYZ(GreenUpSlope)
+crs(GUS)<-crs(ras)
+brk=seq(0,0.25, by=0.00001)
+nbrk=length(brk)
+plot(GUS$value, main="GreenUpSlope", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.25,by=0.1), labels=seq(0,0.25,by=0.1)),zlim=c(0,0.25))
+writeRaster(GUS$value, "GreenUpSlope.img", overwrite=TRUE)
+
+BDS=rasterFromXYZ(BrownDownSlope)
+crs(BDS)<-crs(ras)
+brk=seq(0,0.25, by=0.00001)
+nbrk=length(brk)
+plot(BDS$value, main="BrownDownSlope", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.25,by=0.1), labels=seq(0,0.25,by=0.1)),zlim=c(0,0.25))
+writeRaster(BDS$value, "BrownDownSlope.img", overwrite=TRUE)
+
+BefMaxT=rasterFromXYZ(BeforeMaxT)
+crs(BefMaxT)<-crs(ras)
+brk=seq(0,12, by=0.01)
+nbrk=length(brk)
+plot(BefMaxT$value, main="BeforeMaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,12,by=2), labels=seq(0,12,by=2)), zlim=c(0,12))
+writeRaster(BefMaxT$value, "BeforeMaxT.img", overwrite=TRUE)
+
+AftMaxT=rasterFromXYZ(AfterMaxT)
+crs(AftMaxT)<-crs(ras)
+brk=seq(0,12, by=0.01)
+nbrk=length(brk)
+plot(AftMaxT$value, main="AfterMaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,12,by=2), labels=seq(0,12,by=2)), zlim=c(0,12))
+writeRaster(AftMaxT$value, "AfterMaxT.img", overwrite=TRUE)
+
+Len=rasterFromXYZ(LengthGS)
+crs(Len)<-crs(ras)
+brk=seq(6,17, by=0.1)
+nbrk=length(brk)
+writeRaster(Len$value, "LengthGS.img", overwrite=TRUE)
+plot(Len$value, main="LengthGS", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(6,17,by=2), labels=seq(6,17,by=2)), zlim=c(6,17))
+
+AA=rasterFromXYZ(Area_After)
+crs(AA)<-crs(ras)
+brk=seq(0,6, by=0.0001)
+nbrk=length(brk)
+plot(AA$value, main="TINDVIAfterMax", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,6,by=2), labels=seq(0,6,by=2)), zlim=c(0,6))
+writeRaster(AA$value, "TINDVIAfterMax.img", overwrite=TRUE)
+
+AB=rasterFromXYZ(Area_Before)
+crs(AB)<-crs(ras)
+brk=seq(0,6, by=0.0001)
+nbrk=length(brk)
+plot(AB$value, main="TINDVIBeforeMax", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,6,by=2), labels=seq(0,6,by=2)), zlim=c(0,6))
+writeRaster(AB$value, "TINDVIBeforeMax.img", overwrite=TRUE)
+
+
+AT=rasterFromXYZ(Area_Total)
+crs(AT)<-crs(ras)
+brk=seq(0,8, by=0.001)
+nbrk=length(brk)
+plot(AT$value, main="TINDVI", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,8,by=2), labels=seq(0,8,by=2)), zlim=c(0,8))
+writeRaster(AT$value, "TINDVI.img", overwrite=TRUE)
+
+
+As=rasterFromXYZ(Asymmetry)
+crs(As)<-crs(ras)
+brk=seq(-6,6, by=0.0001)
+nbrk=length(brk)
+plot(As$value, main="Asymmetry", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(-6.0,6.0,by=3), labels=seq(-6.0,6.0,by=3)), zlim=c(-6,6))
+writeRaster(As$value, "Asymmetry.img", overwrite=TRUE)
+
+
+##########################====================================##########################
+
+return("*********************Output file saved at working directory*************************")
+
+##########################====================================##########################
 }  
 #' @export
 #' @return Multiple time series curves together at the plot panel

@@ -4,7 +4,7 @@
 \alias{PhenoMetrics}
 \title{Phenologic metrics from time series vegetation index data}
 \usage{
-PhenoMetrics(RawPath, BolAOI)
+PhenoMetrics(RawPath, BolAOI, Per)
 }
 \arguments{
 \item{BolAOI}{- Logical value - if there is any area of intererst or not}
