@@ -21,7 +21,7 @@
 #'
 #' @keywords Phenology, remote sensing, satellite image, Time-series
 #' @seealso MultiPointsPlot (Path, N,Id1, Id2...IdN)
-#' @description This function extracts 15 phenologic metrics from Moderate Resolution Imaging Spectroradiometer (MODIS)  time series vegetaion index data, as raster and Ascii files. The function takes path of the vegetation index data and the boolean Value for BolAOI (True- if there is AOI polygon, FALSE- if the parameters are calculated for the whole region).
+#' @description This function extracts 15 phenologic metrics from time series vegetaion index data, as raster and Ascii files. The function takes path of the vegetation index data and the boolean Value for BolAOI (True- if there is AOI polygon, FALSE- if the parameters are calculated for the whole region).
 #' @param Path - Text value - the path where the time series images saved 
 #' @param BolAOI - Logical value - if there is any area of intererst or not
 #' @param Percentage - Optional Numeric Vlaue - percentage of minimum NDVI value at which the Onset and Offset is defined. The 'Percentage' paramenter is optional; if not provided, a Default value of 10 will be taken.

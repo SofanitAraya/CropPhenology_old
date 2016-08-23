@@ -1,6 +1,6 @@
 Package: CropPhenology
 Type: Package
-Title: Extract crop phenologic metrics from MODIS timeseries vegetation index data
+Title: Extract phenologic metrics from timeseries vegetation index data
 Version: 1.0
 Date: 2016-20-04
 Author: Sofanit Araya
