@@ -45,10 +45,11 @@ TINDVIAfterMax - the integral area under the curve between Maximum NDVI and Offs
 Asymmetry - the difference between AreaBeforeMax and AreaAfterMax. It measures which part of the growing season attain relatively higher accumulated NDVI values
 }
 \description{
-PhenoMetrics function extracts phenologic metrics from time series vegetaion index data, as raster and Ascii files. The function takes path of the vegetation index data, the boolean Value for BolAOI, and the percentage threshold value as a input parameters. 
-The outputs metrics are plotted in R plot windows shown as maps within the R software for fast and easy visualisation within the R software.The metrics are represented spatially by fifteen raster images in the IMG format in the same projection as the input data which can be viewed from a geographic information system and are also exported as a generically formatted ASCII text file. Each of the ASCII files and the raster output metrics are named as the metrics name, for example OnsetT.txt and OnsetT.img. All output files will be then saved in a folder "Metrics" under the directory specified at the path parameter.} 
-
-
+This function extracts 15 phenologic metrics from time series vegetaion index data, as raster and Ascii files. The function takes path of the vegetation index data and the boolean Value for BolAOI (True- if there is AOI polygon, FALSE- if the parameters are calculated for the whole region).
+}
+\details{
+PhenoMetrics function provides the user with 15 phenological based metrics which build upon those available from previous software TIMESAT(Eklundh and Jönsson, 2015)  and PhenoSat  (Rodrigues et al., 2011) and include new metrics suggested by the remote sensing-agricultural based literature.  Furthermore, we have provided the theoretical biological inferences of how these metrics can be used for crop management to reduce the criticisms of the satellite imagery approach. The output allow easy interpretation as it is available in raster image format which is easy to visualize and swimmingly integrate with other data such as precision agriculture dataset, for further processing, such as analysis of regional yield estimate with the pattern of phenologic parameters.
+}
 \examples{
 # EXAMPLE - 1
 
@@ -63,7 +64,11 @@ PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE, 15)
 \author{
 Sofanit Araya
 }
+\references{
+Eklundh, L., Jönsson, P., 2015. TIMESAT: A Software Package for Time-Series Processing and Assessment of Vegetation Dynamics, in: Kuenzer, C., Dech, S., Wagner, W. (Eds.), Remote Sensing Time Series: Revealing Land Surface Dynamics. Springer International Publishing, Cham, pp. 141-158.
 
+Rodrigues, A., Marcal, A.R.S., Cunha, M., 2011. PhenoSat : A tool for vegetation temporal analysis from satellite image data, Analysis of Multi-temporal Remote Sensing Images (Multi-Temp), 2011 6th International Workshop on the, pp. 45-48.
+}
 \seealso{
 MultiPointsPlot (Path, N,Id1, Id2...IdN)
 }

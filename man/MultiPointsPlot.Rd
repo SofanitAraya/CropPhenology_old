@@ -25,11 +25,13 @@ MultiPointsPlot(path, N, Id1, Id2, Id3, Id4, Id5)
 Multiple time series curves together at the plot panel
 }
 \description{
-MultiPointsPlot function takes PixelIDs for more than one pixels within the region of interst and returns timeseries curves from these points, ploted together. The pixelIds scan be obtained from the txt file output of PhenoMetrics function, AllPixels.txt.
-MultiPointsPlot function provides the ability to visualise the NDVI curve by plotting the temporal sequences of NDVI values of user selected raster pixels. It allows plots of a maximum of five pixels together. 
-The resulting multiple curve plots allow assesment of the spatial and temporal crop growth variability among the selected locations, which provide important information about the environmental factors influencing crop growth (eg . Araya et al., 2016)
+MultiPointsPlot function takes the ID for the pixels within the region of interst and returns, the timeseries curves from these points, ploted together. The Id numbers can be obtained from the txt file (AllPixels.txt) outputs.
 }
+\details{
+This function allows plotting time series curves from multiple points together in a single plot which helps understanding the growth variability across the field.This inforaiton allow observation of the spatial and temporal crop growth variability across the growth seasons, which provide important information about the environmental factors influencing crop growth and thus potential opportunities for influencing crop management (eg . Araya et al., 2016)
 
+The maximum number of pixeles allowed plotting togther are 5 points.
+}
 \examples{
 MultiPointsPlot(system.file("extdata/data3", package="CropPhenology"),3,11,114,125)
 
@@ -38,9 +40,8 @@ MultiPointsPlot(system.file("extdata/data3", package="CropPhenology"),3,11,114,1
 Sofanit Araya
 }
 \references{
-Araya, S., Lyle, G., Lewis, M., Ostendorf, B., 2016. Phenologic metrics derived from MODIS NDVI as indicators for Plant Available Water-holding Capacity.\emph{Ecological Indicators} \bold{60, 1263-1272.}
+Araya, S., Lyle, G., Lewis, M., Ostendorf, B., 2016. Phenologic metrics derived from MODIS NDVI as indicators for Plant Available Water-holding Capacity. Ecological Indicators 60, 1263-1272.
 }
-
 \seealso{
 PhenoMetrics()
 }

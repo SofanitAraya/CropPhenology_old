@@ -128,7 +128,12 @@ PhenoMetrics<- function (Path, BolAOI, Percentage){
   
   
   r=length(try[[1]][,"value"])
-  Hd=list ("X-Cord"," Y_Cord","T1", "T2", "T3" ,"T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13", "T14", "T15", "T16", "T17", "T18", "T19", "T20", "T21", "T22", "T23")  
+  tl=ts(1:FileLen)
+  ttl=0
+  ttl[1]="X-Cord"
+  ttl[2]=" Y_Cord"
+  Hd=append(ttl,tl)
+#  Hd=list ("X-Cord"," Y_Cord","T1", "T2", "T3" ,"T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13", "T14", "T15", "T16", "T17", "T18", "T19", "T20", "T21", "T22", "T23")  
   AllP=data.frame()
   while(s>0 & s<(r+1)){ #iterate through the each pixel
     
@@ -623,7 +628,7 @@ writeRaster(As$value, "Asymmetry.img", overwrite=TRUE)
 
 ##########################====================================##########################
 
-return("*********************Output file saved at working directory*************************")
+return("*****Output file saved under <Metrics> folder under directory*****")
 
 ##########################====================================##########################
 }  
