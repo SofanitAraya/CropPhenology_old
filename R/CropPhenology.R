@@ -43,7 +43,7 @@
 #' PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE, 15)
 #' 
 #' 
-PhenoMetrics<- function (Path, BolAOI, Percentage){
+PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   
   
   #  require('shapefiles')
@@ -75,12 +75,11 @@ PhenoMetrics<- function (Path, BolAOI, Percentage){
     Points=rasterToPoints(ra)
     shp=rasterToPolygons((ra*0), dissolve=TRUE)
   }
-  
+  #===========================================================================  
   if (missing(Percentage)) {
     print ("The default value, 10%, will be applied")
     Percentage=20
   }
-  
   if (!is.numeric(Percentage)){
     stop("Percentage value for Onset and Offset should be numeric")
   }
@@ -90,6 +89,15 @@ PhenoMetrics<- function (Path, BolAOI, Percentage){
   if (Percentage==0){
     stop("Onset-Offset percentage should be greated than 0")
   }
+  #===========================================================================  
+  
+  if (missing(Smoothing)){
+    print("Unsmoothed curve will be used")
+    Smoothing=FALSE
+  }
+  
+  #===========================================================================  
+  
   
   i=1
   try=0
@@ -133,14 +141,14 @@ PhenoMetrics<- function (Path, BolAOI, Percentage){
   ttl[1]="X-Cord"
   ttl[2]=" Y_Cord"
   Hd=append(ttl,tl)
-#  Hd=list ("X-Cord"," Y_Cord","T1", "T2", "T3" ,"T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13", "T14", "T15", "T16", "T17", "T18", "T19", "T20", "T21", "T22", "T23")  
+  #  Hd=list ("X-Cord"," Y_Cord","T1", "T2", "T3" ,"T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13", "T14", "T15", "T16", "T17", "T18", "T19", "T20", "T21", "T22", "T23")  
   AllP=data.frame()
   while(s>0 & s<(r+1)){ #iterate through the each pixel
     
     #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Plot the time series curve of the year for the sth pixel
     #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    
+    SmthTS=as.matrix(0)
     AnnualTS=as.matrix(0)
     q=1 #reset qon for the next pixel comparision
     #===================== Iterate throught the files for s-th pixels to get the curve
@@ -154,133 +162,161 @@ PhenoMetrics<- function (Path, BolAOI, Percentage){
       q=q+1
     }
     
+    #========================================
+    sq=2
+    ll=length(AnnualTS)
+    SmthTS[1]=AnnualTS[1]
+    while (sq<ll){
+      SmthTS[sq]=(AnnualTS[sq]+AnnualTS[sq+1])/2
+      sq=sq+1
+    }
+    SmthTS[ll]=AnnualTS[ll]
+    print (SmthTS)
+    aas=ts(AnnualTS)
+    ssm=ts(SmthTS)
+    ts.plot(ssm, aas, col=1:2)
+    #=========================================
+    
     print (AnnualTS)
     cordinate=0
     cordinate[1]=cor[s,1]
     cordinate[2]=cor[s,2]
     AP=append(cordinate,AnnualTS)
     AllP=rbind(AllP, AP)
-    
     #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    #                                                  Maximum
+    #                                                 Choose smooth or unsmooth
     #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    qmax=1
-    max=AnnualTS[qmax]
-    Max_T=qmax
-    
-    while (qmax>0 & qmax<FileLen){
-      if ((AnnualTS[qmax]) > max){
-        max=AnnualTS[qmax]
-        Max_T=qmax
-      }
-      qmax=qmax+1
+    if (Smoothing==TRUE){
+      Curve=SmthTS
     }
-    Max_TF=Max_T
-    Max_Value[,"value"][s]=max
-    Max_Time[,"value"][s]=Max_TF    
-    
-    
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    #                                                  Onset 
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    onsetT=0
-    onsetV=0
-    # successive slops b/n  points
-    j=Max_T
-    slopon=(AnnualTS[j]-AnnualTS[j-1])
-    slopon=as.matrix(slopon)
-    f=2
+if (Smoothing==FALSE){
+  Curve=AnnualTS
+}
 
-    
-    while(j >2){
-      slopon[f]=(AnnualTS[j-1]-AnnualTS[j-2])
-      j=j-1
-      f=f+1
+
+
+
+
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#                                                  Maximum
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+qmax=1
+max=Curve[qmax]
+Max_T=qmax
+
+while (qmax>0 & qmax<FileLen){
+  if ((Curve[qmax]) > max){
+    max=Curve[qmax]
+    Max_T=qmax
+  }
+  qmax=qmax+1
+}
+Max_TF=Max_T
+Max_Value[,"value"][s]=max
+Max_Time[,"value"][s]=Max_TF    
+
+
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#                                                  Onset 
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+onsetT=0
+onsetV=0
+# successive slops b/n  points
+j=Max_T
+slopon=(Curve[j]-Curve[j-1])
+slopon=as.matrix(slopon)
+f=2
+
+
+while(j >2){
+  slopon[f]=(Curve[j-1]-Curve[j-2])
+  j=j-1
+  f=f+1
+}
+ratio=Percentage/100
+min1=min (Curve[1:Max_T])
+min2=min(Curve[Max_T:(FileLen-1)])
+range1=min1+(ratio*min1) #to get 10% of the min before Max
+range2=min2+(ratio*min2)#to get 10% of the min after Max
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+#                            Last -ve slope- onset
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
+len=length(slopon)
+last=slopon[1]
+i=1
+#i=len
+ls=0
+while((i<(len+1)) & (i>0)){
+  if (last<0.001){
+    #print(last)
+    if (last< 0.001){
+      #print(last)
+      ls=i
+      break
     }
-    ratio=Percentage/100
-    min1=min (AnnualTS[1:Max_T])
-    min2=min(AnnualTS[Max_T:(FileLen-1)])
-    range1=min1+(ratio*min1) #to get 10% of the min before Max
-    range2=min2+(ratio*min2)#to get 10% of the min after Max
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-    #                            Last -ve slope- onset
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
-    len=length(slopon)
-    last=slopon[1]
-    i=1
-    #i=len
-    ls=0
-    while((i<(len+1)) & (i>0)){
-      if (last<0.001){
-        #print(last)
-        if (last< 0.001){
-          #print(last)
-          ls=i
-          break
-        }
-        quick=i
-      }
-      i=i+1
-      last=slopon[i]
-    }
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    quick=i
+  }
+  i=i+1
+  last=slopon[i]
+}
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #    print (slopon)
 #    print(ls)
 #    print (Max_T)
 #    print(max)
 #    print(range1)
- #   print(range2)
-    
-    
-    
-    if (ls==0){ #if only the growing season is presented and only increasing
-      k=1
-      Checked= FALSE
-      while (k<Max_T){
-        if (AnnualTS[k]< range1){
-          onsetT=k
-          onsetV=AnnualTS[k]
-          Checked=TRUE
-        }
-        k=k+1
-      }
-      if (Checked==FALSE){
-        onsetT=1
-        onsetV=AnnualTS[1]
-      }
+#   print(range2)
+
+
+
+if (ls==0){ #if only the growing season is presented and only increasing
+  k=1
+  Checked= FALSE
+  while (k<Max_T){
+    if (Curve[k]< range1){
+      onsetT=k
+      onsetV=Curve[k]
+      Checked=TRUE
     }
-    
-    
-    if (ls>0){
-      ko=Max_T-ls
-      if (AnnualTS[ko]<range1){
-        onsetT=ko
-        onsetV=AnnualTS[ko]
+    k=k+1
+  }
+  if (Checked==FALSE){
+    onsetT=1
+    onsetV=Curve[1]
+  }
+}
+
+
+if (ls>0){
+  ko=Max_T-ls
+  if (Curve[ko]<range1){
+    onsetT=ko
+    onsetV=Curve[ko]
+  }
+  if (Curve[ko]>range1){
+    p=ls
+    Enter=FALSE
+    while (p<(length(slopon)+1)){
+      if (Curve[Max_T-p]<range1){
+        onsetT=Max_T-p
+        onsetV=Curve[Max_T-p]
+        Enter=TRUE
+        break
       }
-      if (AnnualTS[ko]>range1){
-        p=ls
-        Enter=FALSE
-        while (p<(length(slopon)+1)){
-          if (AnnualTS[Max_T-p]<range1){
-            onsetT=Max_T-p
-            onsetV=AnnualTS[Max_T-p]
-            Enter=TRUE
-            break
-          }
-          p=p+1    
-        }
-      }
+      p=p+1    
     }
-  
-      
+  }
+}
+
+
 
 
 if (Enter==FALSE){
   p=Max_T-ls
   while (p<Max_T){
-    if (AnnualTS[p]<range1){
+    if (Curve[p]<range1){
       onsetT=p
-      onsetV=AnnualTS[p]
+      onsetV=Curve[p]
     }
     p=p+1
   }
@@ -300,12 +336,12 @@ offsetT=0
 offsetV=0
 crp=TRUE
 z=Max_T+1
-slopof=(AnnualTS[Max_T+1]-AnnualTS[Max_T])
+slopof=(Curve[Max_T+1]-Curve[Max_T])
 slopof=as.matrix(slopof)
 y=2
 
-while (z<(length(AnnualTS))){
-  slopof[y]=(AnnualTS[z+1]-AnnualTS[z])
+while (z<(length(Curve))){
+  slopof[y]=(Curve[z+1]-Curve[z])
   z=z+1
   y=y+1
 }
@@ -329,10 +365,10 @@ while(i<lenof+1){
       lsof=i
       break
     }
-quick=i
+    quick=i
   }
-i=i+1
-lastof=slopof[i]
+  i=i+1
+  lastof=slopof[i]
 }
 
 
@@ -340,33 +376,33 @@ lastof=slopof[i]
 if (lsof==0){ #if only the growing season is presented and only increasing
   k=Max_T+1
   Checked= FALSE
-  while (k<(length(AnnualTS)+1)){
-    if (AnnualTS[k]< range2){
+  while (k<(length(Curve)+1)){
+    if (Curve[k]< range2){
       offsetT=k
-      offsetV=AnnualTS[k]
+      offsetV=Curve[k]
       Checked=TRUE
     }
     k=k+1
   }
   if (Checked==FALSE){
-    offsetT=length(AnnualTS)
-    offsetV=AnnualTS[offsetT]
+    offsetT=length(Curve)
+    offsetV=Curve[offsetT]
   }
 }
 
 kof=(Max_T+lsof-1)
 if (lsof>0){
-  if (AnnualTS[kof]<range2){
+  if (Curve[kof]<range2){
     offsetT=kof
-    offsetV=AnnualTS[kof]
+    offsetV=Curve[kof]
   }
-  if (AnnualTS[kof]>range2){
+  if (Curve[kof]>range2){
     p=lsof
     Enter=FALSE
     while (p<length(slopof)){
-      if ((slopof[p]>(-0.01)) & (AnnualTS[Max_T+p-1]<range2)){
+      if ((slopof[p]>(-0.01)) & (Curve[Max_T+p-1]<range2)){
         offsetT=Max_T+p-1
-        offsetV=AnnualTS[Max_T+p-1]
+        offsetV=Curve[Max_T+p-1]
         Enter=TRUE
         break
       }
@@ -375,10 +411,10 @@ if (lsof>0){
   }
   if (Enter==FALSE){
     p=Max_T+lsof-1
-    while (p<(length(AnnualTS)+1)){
-      if (AnnualTS[p]<range2){
+    while (p<(length(Curve)+1)){
+      if (Curve[p]<range2){
         offsetT=p
-        offsetV=AnnualTS[p]
+        offsetV=Curve[p]
       }
       p=p+1
     }
@@ -387,8 +423,8 @@ if (lsof>0){
 
 if ((max-offsetV)==0) {
   crp=FALSE
-  offsetT=length(AnnualTS)
-  offsetV=AnnualTS[offsetT]
+  offsetT=length(Curve)
+  offsetV=Curve[offsetT]
 }
 
 print (lsof)
@@ -425,7 +461,7 @@ if (crp==FALSE){
   Area2=0
 }
 while (start<end){
-  Area=Area+AnnualTS[start]
+  Area=Area+Curve[start]
   start=start+1
 }
 #print (Area)
@@ -434,13 +470,13 @@ Area_Total[,"value"][s]=Area
 
 
 start1=St
-Area1=AnnualTS[start1]/2
+Area1=Curve[start1]/2
 start1=start1+1
 while (start1<mx){
-  Area1=Area1+AnnualTS[start1]
+  Area1=Area1+Curve[start1]
   start1=start1+1
 }
-Area1=Area1+(AnnualTS[mx]/2)
+Area1=Area1+(Curve[mx]/2)
 
 print(onsetT)
 print (Area1)
@@ -448,13 +484,13 @@ if (onsetT==0){ Area1=0}
 if (Area==0){ Area1=0}
 Area_Before[,"value"][s]=Area1
 
-Area2=AnnualTS[mx]/2
+Area2=Curve[mx]/2
 start2=mx+1
 while (start2<(end)){
-  Area2=Area2+AnnualTS[start2]
+  Area2=Area2+Curve[start2]
   start2=start2+1
 }
-Area2=Area2+AnnualTS[Ed]/2
+Area2=Area2+Curve[Ed]/2
 #print (Area2)
 if (Area==0){ Area2=0}
 Area_After[,"value"][s]=Area2

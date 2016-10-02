@@ -4,7 +4,7 @@
 \alias{PhenoMetrics}
 \title{Phenologic metrics from time series vegetation index data}
 \usage{
-PhenoMetrics(Path, BolAOI, Percentage)
+PhenoMetrics(Path, BolAOI, Percentage, Smoothing)
 }
 \arguments{
 \item{Path}{- Text value - the path where the time series images saved}
