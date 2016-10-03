@@ -46,10 +46,10 @@
 PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   
   
-  #  require('shapefiles')
-  #  require("raster")
-  #  require("maptools")
-  #  require("rgdal")
+  require('shapefiles')
+  require("raster")
+  require("maptools")
+  require("rgdal")
   require("xlsx")
   require("rgeos")
   require("grid")
@@ -101,6 +101,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   
   i=1
   try=0
+ 
   
   if (FileLen==0){ stop ('No image file obtained in the path mensioned - Check your file type')}
   #  if (FileLen<23){ stop ('The number of images not complete cover the season - check your image files')}
@@ -110,7 +111,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     try[i]=extract (ras,shp, cellnumbers=TRUE)
     i=i+1
   }
-  
+
   try
   
   
