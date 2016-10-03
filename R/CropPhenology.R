@@ -108,7 +108,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   
   while (i<(FileLen+1)) {
     ras=raster(raDir[i])
-    try[i]=extract (ras,shp, cellnumbers=TRUE)
+    try[i]=extract(ras,shp, cellnumbers=TRUE)
     i=i+1
   }
 
@@ -155,6 +155,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     #===================== Iterate throught the files for s-th pixels to get the curve
     
     while (q>0 & q<FileLen+1){
+      print(q)
       GRD_CD=(try[[q]][,"value"][s])/10000
       if (is.na(GRD_CD)){
         GRD_CD=(try[[q-1]][,"value"][s])/10000
