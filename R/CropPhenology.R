@@ -112,7 +112,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     i=i+1
   }
 
-  try
+  #try
   
   
   cor=xyFromCell(ras,try[[1]][,"cell"])
