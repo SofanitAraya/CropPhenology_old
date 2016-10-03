@@ -155,7 +155,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     #===================== Iterate throught the files for s-th pixels to get the curve
     
     while (q>0 & q<FileLen+1){
-      print (q)
+#      print (q)
       GRD_CD=(try[[q]][,"value"][s])/10000
       if ((is.na(GRD_CD))& (q>1)){
         GRD_CD=AnnualTS[q-1]
@@ -176,14 +176,14 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
       sq=sq+1
     }
     SmthTS[ll]=AnnualTS[ll]
-    print (AnnualTS)
-    print (SmthTS)
+#    print (AnnualTS)
+#    print (SmthTS)
     aas=ts(AnnualTS)
     ssm=ts(SmthTS)
-    ts.plot(ssm, aas, col=1:2)
+#    ts.plot(ssm, aas, col=1:2)
     #=========================================
     
-    print (AnnualTS)
+ #   print (AnnualTS)
     cordinate=0
     cordinate[1]=cor[s,1]
     cordinate[2]=cor[s,2]
@@ -198,11 +198,6 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     if (Smoothing==FALSE){
       Curve=AnnualTS
     }
-
-
-
-
-
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   #                                                  Maximum
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
