@@ -155,9 +155,9 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     #===================== Iterate throught the files for s-th pixels to get the curve
     
     while (q>0 & q<FileLen+1){
-      print(q)
+      print (q)
       GRD_CD=(try[[q]][,"value"][s])/10000
-      if (is.na(GRD_CD)){
+      if ((is.na(GRD_CD))& (q>1)){
         GRD_CD=(try[[q-1]][,"value"][s])/10000
       }
       AnnualTS[q]=GRD_CD
