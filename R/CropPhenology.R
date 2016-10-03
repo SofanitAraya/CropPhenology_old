@@ -66,8 +66,8 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   s=1
   Enter=FALSE
   if (BolAOI == TRUE){
-    BolAOI=dir(pattern="*.shp$")
-    shp=readShapePoly(BolAOI)
+    AOI=dir(pattern="*.shp$")
+    shp=readShapePoly(AOI)
   }
   
   if (BolAOI == FALSE){
@@ -112,7 +112,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     i=i+1
   }
 
-  try
+  print (try)
   
   
   cor=xyFromCell(ras,try[[1]][,"cell"])
