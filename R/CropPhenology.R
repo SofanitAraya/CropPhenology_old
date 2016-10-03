@@ -191,318 +191,318 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     if (Smoothing==TRUE){
       Curve=SmthTS
     }
-if (Smoothing==FALSE){
-  Curve=AnnualTS
-}
+    if (Smoothing==FALSE){
+      Curve=AnnualTS
+    }
 
 
 
 
 
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#                                                  Maximum
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-qmax=1
-max=Curve[qmax]
-Max_T=qmax
-
-while (qmax>0 & qmax<FileLen){
-  if ((Curve[qmax]) > max){
-    max=Curve[qmax]
-    Max_T=qmax
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  #                                                  Maximum
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  qmax=1
+  max=Curve[qmax]
+  Max_T=qmax
+  
+  while (qmax>0 & qmax<FileLen){
+    if ((Curve[qmax]) > max){
+      max=Curve[qmax]
+      Max_T=qmax
+    }
+    qmax=qmax+1
   }
-  qmax=qmax+1
-}
-Max_TF=Max_T
-Max_Value[,"value"][s]=max
-Max_Time[,"value"][s]=Max_TF    
-
-
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#                                                  Onset 
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-onsetT=0
-onsetV=0
-# successive slops b/n  points
-j=Max_T
-slopon=(Curve[j]-Curve[j-1])
-slopon=as.matrix(slopon)
-f=2
-
-
-while(j >2){
-  slopon[f]=(Curve[j-1]-Curve[j-2])
-  j=j-1
-  f=f+1
-}
-ratio=Percentage/100
-min1=min (Curve[1:Max_T])
-min2=min(Curve[Max_T:(FileLen-1)])
-range1=min1+(ratio*min1) #to get 10% of the min before Max
-range2=min2+(ratio*min2)#to get 10% of the min after Max
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
-#                            Last -ve slope- onset
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
-len=length(slopon)
-last=slopon[1]
-i=1
-#i=len
-ls=0
-while((i<(len+1)) & (i>0)){
-  if (last<0.001){
-    #print(last)
-    if (last< 0.001){
+  Max_TF=Max_T
+  Max_Value[,"value"][s]=max
+  Max_Time[,"value"][s]=Max_TF    
+  
+  
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  #                                                  Onset 
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  onsetT=0
+  onsetV=0
+  # successive slops b/n  points
+  j=Max_T
+  slopon=(Curve[j]-Curve[j-1])
+  slopon=as.matrix(slopon)
+  f=2
+  
+  
+  while(j >2){
+    slopon[f]=(Curve[j-1]-Curve[j-2])
+    j=j-1
+    f=f+1
+  }
+  ratio=Percentage/100
+  min1=min (Curve[1:Max_T])
+  min2=min(Curve[Max_T:(FileLen-1)])
+  range1=min1+(ratio*min1) #to get 10% of the min before Max
+  range2=min2+(ratio*min2)#to get 10% of the min after Max
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+  #                            Last -ve slope- onset
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
+  len=length(slopon)
+  last=slopon[1]
+  i=1
+  #i=len
+  ls=0
+  while((i<(len+1)) & (i>0)){
+    if (last<0.001){
       #print(last)
-      ls=i
-      break
-    }
-    quick=i
-  }
-  i=i+1
-  last=slopon[i]
-}
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#    print (slopon)
-#    print(ls)
-#    print (Max_T)
-#    print(max)
-#    print(range1)
-#   print(range2)
-
-
-
-if (ls==0){ #if only the growing season is presented and only increasing
-  k=1
-  Checked= FALSE
-  while (k<Max_T){
-    if (Curve[k]< range1){
-      onsetT=k
-      onsetV=Curve[k]
-      Checked=TRUE
-    }
-    k=k+1
-  }
-  if (Checked==FALSE){
-    onsetT=1
-    onsetV=Curve[1]
-  }
-}
-
-
-if (ls>0){
-  ko=Max_T-ls
-  if (Curve[ko]<range1){
-    onsetT=ko
-    onsetV=Curve[ko]
-  }
-  if (Curve[ko]>range1){
-    p=ls
-    Enter=FALSE
-    while (p<(length(slopon)+1)){
-      if (Curve[Max_T-p]<range1){
-        onsetT=Max_T-p
-        onsetV=Curve[Max_T-p]
-        Enter=TRUE
+      if (last< 0.001){
+        #print(last)
+        ls=i
         break
       }
-      p=p+1    
+      quick=i
     }
+    i=i+1
+    last=slopon[i]
   }
-}
-
-
-
-
-if (Enter==FALSE){
-  p=Max_T-ls
-  while (p<Max_T){
-    if (Curve[p]<range1){
-      onsetT=p
-      onsetV=Curve[p]
-    }
-    p=p+1
-  }
-}
-
-onsetTF=onsetT
-#print (onsetV)
-#print(onsetT)
-
-
-Onset_Value[,"value"][s]=onsetV
-Onset_Time[,"value"][s]=onsetTF
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#                                                  Offset
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-offsetT=0
-offsetV=0
-crp=TRUE
-z=Max_T+1
-slopof=(Curve[Max_T+1]-Curve[Max_T])
-slopof=as.matrix(slopof)
-y=2
-
-while (z<(length(Curve))){
-  slopof[y]=(Curve[z+1]-Curve[z])
-  z=z+1
-  y=y+1
-}
-
-print (slopof)
-print(range2)
-
-lenof=length(slopof)
-lastof=slopof[lenof]
-
-i=1
-#i=len
-lsof=0
-
-
-while(i<lenof+1){
-  if (lastof>(-0.01)){
-    #print(last)
-    if (lastof> (-0.01)){
-      #print(last)
-      lsof=i
-      break
-    }
-    quick=i
-  }
-  i=i+1
-  lastof=slopof[i]
-}
-
-
-
-if (lsof==0){ #if only the growing season is presented and only increasing
-  k=Max_T+1
-  Checked= FALSE
-  while (k<(length(Curve)+1)){
-    if (Curve[k]< range2){
-      offsetT=k
-      offsetV=Curve[k]
-      Checked=TRUE
-    }
-    k=k+1
-  }
-  if (Checked==FALSE){
-    offsetT=length(Curve)
-    offsetV=Curve[offsetT]
-  }
-}
-
-kof=(Max_T+lsof-1)
-if (lsof>0){
-  if (Curve[kof]<range2){
-    offsetT=kof
-    offsetV=Curve[kof]
-  }
-  if (Curve[kof]>range2){
-    p=lsof
-    Enter=FALSE
-    while (p<length(slopof)){
-      if ((slopof[p]>(-0.01)) & (Curve[Max_T+p-1]<range2)){
-        offsetT=Max_T+p-1
-        offsetV=Curve[Max_T+p-1]
-        Enter=TRUE
-        break
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  #    print (slopon)
+  #    print(ls)
+  #    print (Max_T)
+  #    print(max)
+  #    print(range1)
+  #   print(range2)
+  
+  
+  
+  if (ls==0){ #if only the growing season is presented and only increasing
+    k=1
+    Checked= FALSE
+    while (k<Max_T){
+      if (Curve[k]< range1){
+        onsetT=k
+        onsetV=Curve[k]
+        Checked=TRUE
       }
-      p=p+1    
+      k=k+1
+    }
+    if (Checked==FALSE){
+      onsetT=1
+      onsetV=Curve[1]
     }
   }
+  
+  
+  if (ls>0){
+    ko=Max_T-ls
+    if (Curve[ko]<range1){
+      onsetT=ko
+      onsetV=Curve[ko]
+    }
+    if (Curve[ko]>range1){
+      p=ls
+      Enter=FALSE
+      while (p<(length(slopon)+1)){
+        if (Curve[Max_T-p]<range1){
+          onsetT=Max_T-p
+          onsetV=Curve[Max_T-p]
+          Enter=TRUE
+          break
+        }
+        p=p+1    
+      }
+    }
+  }
+  
+  
+  
+  
   if (Enter==FALSE){
-    p=Max_T+lsof-1
-    while (p<(length(Curve)+1)){
-      if (Curve[p]<range2){
-        offsetT=p
-        offsetV=Curve[p]
+    p=Max_T-ls
+    while (p<Max_T){
+      if (Curve[p]<range1){
+        onsetT=p
+        onsetV=Curve[p]
       }
       p=p+1
     }
   }
-}
-
-if ((max-offsetV)==0) {
-  crp=FALSE
-  offsetT=length(Curve)
-  offsetV=Curve[offsetT]
-}
-
-print (lsof)
-
-print (offsetV)
-print(offsetT)
-offsetTF=offsetT
-
-Offset_Value[,"value"][s]=offsetV
-Offset_Time[,"value"][s]= offsetTF
-
-
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#                                                Area
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-St=abs(round (onsetT))
-Ed=abs(round(offsetT))
-Area=0
-start=St
-end=Ed+1
-mx=Max_T
-
-if (St<=0) {
-  start=9
-  start1=9
-  start2=9
-}
-
-if (crp==FALSE){
-  Area=0
-  Area1=0
-  Area2=0
-}
-while (start<end){
-  Area=Area+Curve[start]
-  start=start+1
-}
-#print (Area)
-
-Area_Total[,"value"][s]=Area
-
-
-start1=St
-Area1=Curve[start1]/2
-start1=start1+1
-while (start1<mx){
-  Area1=Area1+Curve[start1]
-  start1=start1+1
-}
-Area1=Area1+(Curve[mx]/2)
-
-print(onsetT)
-print (Area1)
-if (onsetT==0){ Area1=0}
-if (Area==0){ Area1=0}
-Area_Before[,"value"][s]=Area1
-
-Area2=Curve[mx]/2
-start2=mx+1
-while (start2<(end)){
-  Area2=Area2+Curve[start2]
-  start2=start2+1
-}
-Area2=Area2+Curve[Ed]/2
-#print (Area2)
-if (Area==0){ Area2=0}
-Area_After[,"value"][s]=Area2
-
-Asy=Area1-Area2
-Asymmetry[,"value"][s]=Asy
-
-s=s+1
-
+  
+  onsetTF=onsetT
+  #print (onsetV)
+  #print(onsetT)
+  
+  
+  Onset_Value[,"value"][s]=onsetV
+  Onset_Time[,"value"][s]=onsetTF
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  #                                                  Offset
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  offsetT=0
+  offsetV=0
+  crp=TRUE
+  z=Max_T+1
+  slopof=(Curve[Max_T+1]-Curve[Max_T])
+  slopof=as.matrix(slopof)
+  y=2
+  
+  while (z<(length(Curve))){
+    slopof[y]=(Curve[z+1]-Curve[z])
+    z=z+1
+    y=y+1
   }
+  
+  print (slopof)
+  print(range2)
+  
+  lenof=length(slopof)
+  lastof=slopof[lenof]
+  
+  i=1
+  #i=len
+  lsof=0
+  
+  
+  while(i<lenof+1){
+    if (lastof>(-0.01)){
+      #print(last)
+      if (lastof> (-0.01)){
+        #print(last)
+        lsof=i
+        break
+      }
+      quick=i
+    }
+    i=i+1
+    lastof=slopof[i]
+  }
+  
+  
+  
+  if (lsof==0){ #if only the growing season is presented and only increasing
+    k=Max_T+1
+    Checked= FALSE
+    while (k<(length(Curve)+1)){
+      if (Curve[k]< range2){
+        offsetT=k
+        offsetV=Curve[k]
+        Checked=TRUE
+      }
+      k=k+1
+    }
+    if (Checked==FALSE){
+      offsetT=length(Curve)
+      offsetV=Curve[offsetT]
+    }
+  }
+  
+  kof=(Max_T+lsof-1)
+  if (lsof>0){
+    if (Curve[kof]<range2){
+      offsetT=kof
+      offsetV=Curve[kof]
+    }
+    if (Curve[kof]>range2){
+      p=lsof
+      Enter=FALSE
+      while (p<length(slopof)){
+        if ((slopof[p]>(-0.01)) & (Curve[Max_T+p-1]<range2)){
+          offsetT=Max_T+p-1
+          offsetV=Curve[Max_T+p-1]
+          Enter=TRUE
+          break
+        }
+        p=p+1    
+      }
+    }
+    if (Enter==FALSE){
+      p=Max_T+lsof-1
+      while (p<(length(Curve)+1)){
+        if (Curve[p]<range2){
+          offsetT=p
+          offsetV=Curve[p]
+        }
+        p=p+1
+      }
+    }
+  }
+  
+  if ((max-offsetV)==0) {
+    crp=FALSE
+    offsetT=length(Curve)
+    offsetV=Curve[offsetT]
+  }
+  
+  print (lsof)
+  
+  print (offsetV)
+  print(offsetT)
+  offsetTF=offsetT
+  
+  Offset_Value[,"value"][s]=offsetV
+  Offset_Time[,"value"][s]= offsetTF
+  
+  
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  #                                                Area
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
+  
+  St=abs(round (onsetT))
+  Ed=abs(round(offsetT))
+  Area=0
+  start=St
+  end=Ed+1
+  mx=Max_T
+  
+  if (St<=0) {
+    start=9
+    start1=9
+    start2=9
+  }
+  
+  if (crp==FALSE){
+    Area=0
+    Area1=0
+    Area2=0
+  }
+  while (start<end){
+    Area=Area+Curve[start]
+    start=start+1
+  }
+  #print (Area)
+  
+  Area_Total[,"value"][s]=Area
+  
+  
+  start1=St
+  Area1=Curve[start1]/2
+  start1=start1+1
+  while (start1<mx){
+    Area1=Area1+Curve[start1]
+    start1=start1+1
+  }
+  Area1=Area1+(Curve[mx]/2)
+  
+  print(onsetT)
+  print (Area1)
+  if (onsetT==0){ Area1=0}
+  if (Area==0){ Area1=0}
+  Area_Before[,"value"][s]=Area1
+  
+  Area2=Curve[mx]/2
+  start2=mx+1
+  while (start2<(end)){
+    Area2=Area2+Curve[start2]
+    start2=start2+1
+  }
+  Area2=Area2+Curve[Ed]/2
+  #print (Area2)
+  if (Area==0){ Area2=0}
+  Area_After[,"value"][s]=Area2
+  
+  Asy=Area1-Area2
+  Asymmetry[,"value"][s]=Asy
+  
+  s=s+1
+  
+    }
 
 dir.create("Metrics")
 setwd(paste(getwd(), "Metrics", sep="/"))
