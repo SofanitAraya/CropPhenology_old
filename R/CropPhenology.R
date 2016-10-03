@@ -112,7 +112,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     i=i+1
   }
 
-  print (try)
+ # print (try)
   
   
   cor=xyFromCell(ras,try[[1]][,"cell"])
@@ -155,10 +155,13 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     #===================== Iterate throught the files for s-th pixels to get the curve
     
     while (q>0 & q<FileLen+1){
-      print (q)
+#      print (q)
       GRD_CD=(try[[q]][,"value"][s])/10000
       if ((is.na(GRD_CD))& (q>1)){
         GRD_CD=(try[[q-1]][,"value"][s])/10000
+      }
+      if ((is.na(GRD_CD))& (q==1)){
+        GRD_CD=0
       }
       AnnualTS[q]=GRD_CD
       q=q+1
@@ -173,6 +176,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
       sq=sq+1
     }
     SmthTS[ll]=AnnualTS[ll]
+    print (AnnualTS)
     print (SmthTS)
     aas=ts(AnnualTS)
     ssm=ts(SmthTS)
