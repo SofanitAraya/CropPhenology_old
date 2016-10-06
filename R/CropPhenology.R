@@ -25,7 +25,7 @@
 #' @param Path - Text value - the path where the time series images saved 
 #' @param BolAOI - Logical value - if there is any area of intererst or not
 #' @param Percentage - Optional Numeric Vlaue - percentage of minimum NDVI value at which the Onset and Offset is defined. The 'Percentage' paramenter is optional; if not provided, a Default value of 10 will be taken.
-#' @param Smoothing - Optional logical value - if the user chooses to use smoothed curve or row/unsmoothed curve
+#' @param Smoothing - Optional logical value - if the user chooses to use smoothed curve or row/unsmoothed curve. If "Smoothing' is set to TRUE, the moving avegare filter will be applied to the vegetation index curve. The default value, if not provided, is FALSE, then the unsmoothed row data be used for the analysis.
 #' 
 #' @export
 #' @details PhenoMetrics function provides the user with 15 phenological based metrics which build upon those available from previous software TIMESAT(Eklundh and Jönsson, 2015)  and PhenoSat  (Rodrigues et al., 2011) and include new metrics suggested by the remote sensing-agricultural based literature.  Furthermore, we have provided the theoretical biological inferences of how these metrics can be used for crop management to reduce the criticisms of the satellite imagery approach. The output allow easy interpretation as it is available in raster image format which is easy to visualize and swimmingly integrate with other data such as precision agriculture dataset, for further processing, such as analysis of regional yield estimate with the pattern of phenologic parameters.
@@ -37,11 +37,11 @@
 #'@examples
 #' # EXAMPLE - 1
 #' 
-#' PhenoMetrics(system.file("extdata/data1", package="CropPhenology"), FALSE)
+#' PhenoMetrics(system.file("extdata/data1", package="CropPhenology"), FALSE, 15, TRUE)
 #'  
 #' # EXAMPLE - 2
 #'  
-#' PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE, 15)
+#' PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
 #' 
 #' 
 PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
