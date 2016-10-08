@@ -12,6 +12,8 @@ PhenoMetrics(Path, BolAOI, Percentage, Smoothing)
 \item{BolAOI}{- Logical value - if there is any area of intererst or not}
 
 \item{Percentage}{- Optional Numeric Vlaue - percentage of minimum NDVI value at which the Onset and Offset is defined. The 'Percentage' paramenter is optional; if not provided, a Default value of 10 will be taken.}
+
+\item{Smoothing}{- Optional logical value - if the user chooses to use smoothed curve or row/unsmoothed curve. If "Smoothing' is set to TRUE, the moving avegare filter will be applied to the vegetation index curve. The default value, if not provided, is FALSE, then the unsmoothed row data be used for the analysis.}
 }
 \value{
 OnsetV - NDVI value at the start of continuous positive slope between successive NDVI values above the user defined percentage threshold. It represent early gorth srages (seedling)
@@ -53,11 +55,11 @@ PhenoMetrics function provides the user with 15 phenological based metrics which
 \examples{
 # EXAMPLE - 1
 
-PhenoMetrics(system.file("extdata/data1", package="CropPhenology"), FALSE)
+PhenoMetrics(system.file("extdata/data1", package="CropPhenology"), FALSE, 15, TRUE)
  
 # EXAMPLE - 2
  
-PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE, 15)
+PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
 
 
 }
