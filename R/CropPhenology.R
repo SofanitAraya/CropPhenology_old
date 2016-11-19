@@ -1,5 +1,7 @@
 
-
+#======================================================================================================================================
+#                                     PhenoMetrics Function
+#======================================================================================================================================
 #' Phenologic metrics from time series vegetation index data
 #' 
 #' @author  Sofanit Araya
@@ -44,38 +46,20 @@
 #' PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
 #' 
 #' 
+
 PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
-  
-  
   require('shapefiles')
-  require("raster")
   require("maptools")
   require("rgdal")
   require("xlsx")
   require("rgeos")
-  require("grid")
+#  require("grid")
+  require("raster")
   
-  setwd(Path)
-  raDir=dir(path=Path, pattern = c(".img$|.tif$"))
-  FileLen=length(raDir)
-  q=1
-  qon=1
-  qoff=1
-  qmax=1
-  par(mfrow=c(1,1))
-  par(mar=c(3.5, 2.5, 2.5, 5.5))
-  s=1
-  Enter=FALSE
-  if (BolAOI == TRUE){
-    AOI=dir(pattern="*.shp$")
-    shp=readShapePoly(AOI)
-  }
+  shp=0
+  NMAOI=0
+  AOI=0
   
-  if (BolAOI == FALSE){
-    ra=raster(raDir[1])    
-    Points=rasterToPoints(ra)
-    shp=rasterToPolygons((ra*0), dissolve=TRUE)
-  }
   #===========================================================================  
   if (missing(Percentage)) {
     print ("The default value, 10%, will be applied")
@@ -98,107 +82,323 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   }
   
   #===========================================================================  
+
+    
+  setwd(Path)
+  raDir=dir(path=Path, pattern = c(".img$|.tif$"))
+  FileLen=length(raDir)
+  allras <- list.files(pattern = c(".img$|.tif$"))
+  hugeStack = stack(allras)
+  q=1
+  qon=1
+  qoff=1
+  qmax=1
+  par(mfrow=c(1,1))
+  par(mar=c(3.5, 2.5, 2.5, 5.5))
+  s=1
+  Enter=FALSE
   
-  
-  i=1
-  try=0
- 
-  
-  if (FileLen==0){ stop ('No image file obtained in the path mensioned - Check your file type')}
-  #  if (FileLen<23){ stop ('The number of images not complete cover the season - check your image files')}
-  
-  while (i<(FileLen+1)) {
-    ras=raster(raDir[i])
-    try[i]=extract(ras,shp, cellnumbers=TRUE)
-    i=i+1
+  if (BolAOI == TRUE){
+    AOI=dir(pattern="*.shp$")
+    NMAOI=sub(".shp","",AOI, fixed=TRUE)
+    shp=readOGR(Path, NMAOI)
+    #shp=readShapePoly(AOI)
+    if (class(shp)=="SpatialPointsDataFrame"){
+      #points = readOGR(Path,"EP_Apsoil")
+      pTrans = spTransform(shp, crs(hugeStack))
+      pcor = coordinates(pTrans)
+      ModisCurves = extract(hugeStack,pcor[,1:2]) / 10000
+      PhenoArray = array(dim = c(nrow(ModisCurves), 15))
+      
+      for (i in 1:nrow(ModisCurves)){
+        PhenoArray[i,] <- PhenoVector(ModisCurves[i,],15, FALSE)
+      }
+      cnames = c('x','y', 'Onset_Value','Onset_Time','Offset_Value','Offset_Time','Max_Value','Max_Time','Area_Total','Area_Before','Area_After','Asymmetry','GreenUpSlope','BrownDownSlope','LengthGS','BeforeMaxT','AfterMaxT')
+      
+      PhenoDataframe = data.frame(cbind(pcor[,1:2],PhenoArray))
+      colnames(PhenoDataframe) = cnames
+      
+      dir.create("Metrics")
+      setwd(paste(getwd(), "Metrics", sep="/"))
+      getwd()
+      
+      write.csv(PhenoDataframe,"Pheno_table.csv")
+      
+      print ("output metrics for the point data is saved at 'Metrics' folder as 'Pheno_table.csv'")
+      stop()    
+    }
+    
+    if (class(shp)=="SpatialPolygonsDataFrame"){
+      #temp=raDir[1]
+      #shp = readOGR(Path,"Bon")
+      tmpstack = crop(hugeStack,shp)
+      imageStack = mask(tmpstack,shp)
+      #imgst=stack(imageStack)
+      g=array(, dim=dim(imageStack))
+      #g[,,]=imageStack[,,]
+      
+      
+      r=1
+      for (r in 1:(dim(imageStack)[1])) {
+          g[r,,]  = imageStack[r,,]
+      }        
+    
+      
+      
+      
+      
+      
+      
+      #imageArray = as.array(imageStack[,,])
+      PhenoArray = array(dim = c((dim(g))[1],(dim(g))[2],15))
+      
+      for ( r in 1:(dim(g))[1]) {
+        for ( c in 1:(dim(g))[2]) {
+          t1 <- (as.vector(g[r,c,]))
+          p1=t1/10000
+          PhenoArray[r,c,] = PhenoVector(p1, Percentage, Smoothing)
+        } 
+      }
+      PhenoStack <- raster(PhenoArray[,,1], template = imageStack)
+      for (i in 2:15) {
+        PhenoStack <- stack(PhenoStack,raster(PhenoArray[,,i], template = imageStack))
+      }
+      names(PhenoStack) = c('Onset_Value','Onset_Time','Offset_Value','Offset_Time','Max_Value','Max_Time','TINDVI','Area_Before','Area_After','Asymmetry','GreenUpSlope','BrownDownSlope','LengthGS','BeforeMaxT','AfterMaxT')
+    }
+    
   }
 
- # print (try)
+  dir.create("Metrics")
+  setwd(paste(getwd(), "Metrics", sep="/"))
   
+  print(getwd())
+  crs(PhenoStack)=crs(hugeStack)
+  writeRaster(PhenoStack,"PhenoStack.img")
   
-  cor=xyFromCell(ras,try[[1]][,"cell"])
-  com=cbind(cor,try[[1]])
-  
-  Onset_Value=com
-  Onset_Time=com
-  Offset_Value=com
-  Offset_Time=com
-  Max_Value=com
-  Max_Time=com
-  Area_Total=com
-  Area_Before=com
-  Area_After=com
-  Asymmetry=com
-  GreenUpSlope=com
-  BrownDownSlope=com
-  LengthGS=com
-  BeforeMaxT=com
-  AfterMaxT=com
-  Amplitude=com
-  
-  
-  r=length(try[[1]][,"value"])
-  tl=ts(1:FileLen)
-  ttl=0
-  ttl[1]="X-Cord"
-  ttl[2]=" Y_Cord"
-  Hd=append(ttl,tl)
-  #  Hd=list ("X-Cord"," Y_Cord","T1", "T2", "T3" ,"T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13", "T14", "T15", "T16", "T17", "T18", "T19", "T20", "T21", "T22", "T23")  
-  AllP=data.frame()
-  while(s>0 & s<(r+1)){ #iterate through the each pixel
+  if (BolAOI == FALSE){
+    ra=raster(raDir[1])    
+    Points=rasterToPoints(ra)
+    shp=rasterToPolygons((ra*0), dissolve=TRUE)
+    temp=raDir[1]
+    #    shp = readOGR(Path,"Bon")
+    tmpstack = crop(hugeStack,shp)
+    imageStack = mask(tmpstack,shp)
+    imageArray <- as.array(imageStack)
+    PhenoArray = array(dim = c(dim(imageArray)[1],dim(imageArray)[2],15))
     
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Plot the time series curve of the year for the sth pixel
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    SmthTS=as.matrix(0)
-    AnnualTS=as.matrix(0)
-    q=1 #reset qon for the next pixel comparision
-    #===================== Iterate throught the files for s-th pixels to get the curve
-    
-    while (q>0 & q<FileLen+1){
-#      print (q)
-      GRD_CD=(try[[q]][,"value"][s])/10000
-      if ((is.na(GRD_CD))& (q>1)){
-        GRD_CD=AnnualTS[q-1]
-      }
-      if ((is.na(GRD_CD))& (q==1)){
-        GRD_CD=0
-      }
-      AnnualTS[q]=GRD_CD
-      q=q+1
+    for ( r in 1:dim(imageArray)[1]) {
+      for ( c in 1:dim(imageArray)[2]) {
+        p1 <- as.vector(imageArray[r,c,])
+        PhenoArray[r,c,] = PhenoVector(p1,Percentage, Smoothing)
+      } 
+    }
+    PhenoStack <- raster(PhenoArray[,,1], template = imageStack)
+    for (i in 2:15) {
+      PhenoStack <- stack(PhenoStack,raster(PhenoArray[,,i], template = imageStack))
     }
     
-    #========================================
-    sq=2
-    ll=length(AnnualTS)
-    SmthTS[1]=AnnualTS[1]
-    while (sq<ll){
-      SmthTS[sq]=(AnnualTS[sq]+AnnualTS[sq+1])/2
-      sq=sq+1
-    }
-    SmthTS[ll]=AnnualTS[ll]
-#    print (AnnualTS)
-#    print (SmthTS)
-    aas=ts(AnnualTS)
-    ssm=ts(SmthTS)
-#    ts.plot(ssm, aas, col=1:2)
-    #=========================================
+    names(PhenoStack) <- c('Onset_Value','Onset_Time','Offset_Value','Offset_Time','Max_Value','Max_Time','TINDVI','Area_Before','Area_After','Asymmetry','GreenUpSlope','BrownDownSlope','LengthGS','BeforeMaxT','AfterMaxT')
     
- #   print (AnnualTS)
-    cordinate=0
-    cordinate[1]=cor[s,1]
-    cordinate[2]=cor[s,2]
-    AP=append(cordinate,AnnualTS)
-    AllP=rbind(AllP, AP)
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    #                                                 Choose smooth or unsmooth
-    #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    if (Smoothing==TRUE){
-      Curve=SmthTS
-    }
-    if (Smoothing==FALSE){
-      Curve=AnnualTS
-    }
+    dir.create("Metrics")
+    setwd(paste(getwd(), "Metrics", sep="/"))
+    
+    print(getwd())
+    writeRaster(PhenoStack,"PhenoStack.img")    
+  }
+  
+  
+  coords = rasterToPoints(imageStack)
+  # Number of pixels: 
+  nrow(coords)  
+  # MODIS time series of pixel 1
+  p1 <- coords[1,3:ncol(coords)]
+  for (i in 1:nrow(coords)){
+    plot(coords[i,3:ncol(coords)])
+  }
+  #===========================================
+  #Writing the txt at Metrics
+  
+  #dir.create("Metrics")
+  #setwd(paste(getwd(), "Metrics", sep="/"))
+  
+  # extracts all temporal values for all pixels
+ # write.table(coords, "AllPixels.txt")
+
+  ###===================================================================================================
+  
+  par(mfrow=c(2,2))
+  
+  #names(AllP)=Hd
+  
+  #write.csv(AllP, "AllPixels.txt")
+  
+#  PhenoStack
+  
+  OT=PhenoStack$Onset_Time
+  crs(OT)<-crs(shp)
+  brk=seq(2,16, by=0.01)
+  nbrk=length(brk)
+  plot(OT, main="OnsetT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(2,16,by=2), labels=seq(2,16,by=2)), zlim=c(2,16))
+  writeRaster(OT, "OnsetT.img", overwrite=TRUE)
+  
+  OV=PhenoStack$Onset_Value
+  brk=seq(0.1,0.6, by=0.001)
+  nbrk=length(brk)
+  crs(OV)<-crs(shp)
+  plot(OV, main="OnsetV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0.1,0.6,by=0.2), labels=seq(0.1,0.6,by=0.2)), zlim=c(0.1,0.6))
+  writeRaster(OV, "OnsetV.img", overwrite=TRUE)
+  
+  MT=PhenoStack$Max_Time
+  crs(MT)<-crs(shp)
+  brk=seq(8,19, by=1)
+  nbrk=length(brk)
+  lblbrk=brk
+  plot(MT, main="MaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(8,19,by=2), labels=seq(8,19,by=2)),zlim=c(8,19))
+  writeRaster(MT, "MaxT.img", overwrite=TRUE)
+  
+  
+  MV=PhenoStack$Max_Value
+  crs(MV)<-crs(shp)
+  brk=seq(0.2,1, by=0.1)
+  nbrk=length(brk)
+  plot(MV, main="MaxV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0.2,1,by=0.2), labels=seq(0.2,1,by=0.2)), zlim=c(0.2,1))
+  writeRaster(MV, "MaxV.img", overwrite=TRUE)
+  
+  OFT=PhenoStack$Offset_Time
+  crs(OFT)<-crs(shp)
+  brk=seq(16,23, by=0.01)
+  nbrk=length(brk)
+  plot(OFT, main="OffsetT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(16,23,by=2), labels=seq(16,23,by=2)), zlim=c(16,23))
+  writeRaster(OFT, "OffsetT.img", overwrite=TRUE)
+  
+  OFV=PhenoStack$Offset_Value
+  crs(OFV)<-crs(shp)
+  brk=seq(0,0.4, by=0.001)
+  nbrk=length(brk)
+  plot(OFV, main="OffsetV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.4,by=0.1), labels=seq(0,0.4,by=0.1)), zlim=c(0,0.4))
+  writeRaster(OFV, "OffsetV.img", overwrite=TRUE)
+  
+  c('Onset_Value','Onset_Time','Offset_Value','Offset_Time','Max_Value','Max_Time','TINDVI','Area_Before','Area_After','Asymmetry','GreenUpSlope','BrownDownSlope','LengthGS','BeforeMaxT','AfterMaxT')  
+  
+  GUS=PhenoStack$GreenUpSlope
+  crs(GUS)<-crs(shp)
+  brk=seq(0,0.25, by=0.00001)
+  nbrk=length(brk)
+  plot(GUS, main="GreenUpSlope", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.25,by=0.1), labels=seq(0,0.25,by=0.1)),zlim=c(0,0.25))
+  writeRaster(GUS, "GreenUpSlope.img", overwrite=TRUE)
+  
+  BDS=PhenoStack$BrownDownSlope
+  crs(BDS)<-crs(shp)
+  brk=seq(0,0.25, by=0.00001)
+  nbrk=length(brk)
+  plot(BDS, main="BrownDownSlope", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.25,by=0.1), labels=seq(0,0.25,by=0.1)),zlim=c(0,0.25))
+  writeRaster(BDS, "BrownDownSlope.img", overwrite=TRUE)
+  
+  BefMaxT=PhenoStack$BeforeMaxT
+  crs(BefMaxT)<-crs(shp)
+  brk=seq(0,12, by=0.01)
+  nbrk=length(brk)
+  plot(BefMaxT, main="BeforeMaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,12,by=2), labels=seq(0,12,by=2)), zlim=c(0,12))
+  writeRaster(BefMaxT, "BeforeMaxT.img", overwrite=TRUE)
+  
+  AftMaxT=PhenoStack$AfterMaxT
+  crs(AftMaxT)<-crs(shp)
+  brk=seq(0,12, by=0.01)
+  nbrk=length(brk)
+  plot(AftMaxT, main="AfterMaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,12,by=2), labels=seq(0,12,by=2)), zlim=c(0,12))
+  writeRaster(AftMaxT, "AfterMaxT.img", overwrite=TRUE)
+  
+  Len=PhenoStack$LengthGS
+  crs(Len)<-crs(shp)
+  brk=seq(6,17, by=0.1)
+  nbrk=length(brk)
+  writeRaster(Len, "LengthGS.img", overwrite=TRUE)
+  plot(Len, main="LengthGS", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(6,17,by=2), labels=seq(6,17,by=2)), zlim=c(6,17))
+  
+  AA=PhenoStack$Area_After
+  crs(AA)<-crs(shp)
+  brk=seq(0,6, by=0.0001)
+  nbrk=length(brk)
+  plot(AA, main="TINDVIAfterMax", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,6,by=2), labels=seq(0,6,by=2)), zlim=c(0,6))
+  writeRaster(AA, "TINDVIAfterMax.img", overwrite=TRUE)
+  
+  AB=PhenoStack$Area_Before
+  crs(AB)<-crs(shp)
+  brk=seq(0,6, by=0.0001)
+  nbrk=length(brk)
+  plot(AB, main="TINDVIBeforeMax", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,6,by=2), labels=seq(0,6,by=2)), zlim=c(0,6))
+  writeRaster(AB, "TINDVIBeforeMax.img", overwrite=TRUE)
+  
+  
+  AT=PhenoStack$TINDVI
+  crs(AT)<-crs(shp)
+  brk=seq(0,8, by=0.001)
+  nbrk=length(brk)
+  plot(AT, main="TINDVI", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,8,by=2), labels=seq(0,8,by=2)), zlim=c(0,8))
+  writeRaster(AT, "TINDVI.img", overwrite=TRUE)
+  
+  
+  As=PhenoStack$Asymmetry
+  crs(As)<-crs(shp)
+  brk=seq(-6,6, by=0.0001)
+  nbrk=length(brk)
+  plot(As, main="Asymmetry", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(-6.0,6.0,by=3), labels=seq(-6.0,6.0,by=3)), zlim=c(-6,6))
+  writeRaster(As, "Asymmetry.img", overwrite=TRUE)
+  
+  
+  ##########################====================================##########################
+  
+  return("*****Output file saved under <Metrics> folder under directory*****")
+  
+  ##########################====================================##########################
+}  
+#===============================================================================================================
+
+
+
+#===============================================================================================================
+#                                     PhenoVector Function
+#===============================================================================================================
+# PhenoVector - calculates phenologic metrics for each pixel and return to the PhenoMetrics function 
+
+PhenoVector <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
+  #
+  if(sum(is.na(AnnualTS)) > 0) {
+    PVector = rep(NA,15)
+    return(PVector) 
+  }
+  
+  #========================================
+  sq=2
+  ll=length(AnnualTS)
+  # SOFI - need to check FileLen and Enter initial values
+  Enter = FALSE
+  FileLen = ll
+  SmthTS = vector(length=length(AnnualTS))
+  SmthTS[1]=AnnualTS[1]
+  while (sq<ll){
+    SmthTS[sq]=(AnnualTS[sq]+AnnualTS[sq+1])/2
+    sq=sq+1
+  }
+  SmthTS[ll]=AnnualTS[ll]
+  #    print (AnnualTS)
+  #    print (SmthTS)
+  aas=ts(AnnualTS)
+  ssm=ts(SmthTS)
+  #    ts.plot(ssm, aas, col=1:2)
+  #=========================================
+  
+  #   print (AnnualTS)
+  
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  #                                                 Choose smooth or unsmooth
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  if (Smoothing==TRUE){
+    Curve=SmthTS
+  }
+  if (Smoothing==FALSE){
+    Curve=AnnualTS
+  }
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   #                                                  Maximum
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -214,8 +414,8 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     qmax=qmax+1
   }
   Max_TF=Max_T
-  Max_Value[,"value"][s]=max
-  Max_Time[,"value"][s]=Max_TF    
+  Max_Value=max
+  Max_Time=Max_TF    
   
   
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -329,8 +529,8 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   #print(onsetT)
   
   
-  Onset_Value[,"value"][s]=onsetV
-  Onset_Time[,"value"][s]=onsetTF
+  Onset_Value=onsetV
+  Onset_Time=onsetTF
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   #                                                  Offset
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -348,8 +548,8 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     y=y+1
   }
   
-  print (slopof)
-  print(range2)
+  #print (slopof)
+  #print(range2)
   
   lenof=length(slopof)
   lastof=slopof[lenof]
@@ -429,14 +629,14 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     offsetV=Curve[offsetT]
   }
   
-  print (lsof)
+  #print (lsof)
   
-  print (offsetV)
-  print(offsetT)
+  #print (offsetV)
+  #print(offsetT)
   offsetTF=offsetT
   
-  Offset_Value[,"value"][s]=offsetV
-  Offset_Time[,"value"][s]= offsetTF
+  Offset_Value=offsetV
+  Offset_Time= offsetTF
   
   
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -468,7 +668,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   }
   #print (Area)
   
-  Area_Total[,"value"][s]=Area
+  Area_Total=Area
   
   
   start1=St
@@ -480,11 +680,11 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   }
   Area1=Area1+(Curve[mx]/2)
   
-  print(onsetT)
-  print (Area1)
+  #print(onsetT)
+  #print (Area1)
   if (onsetT==0){ Area1=0}
   if (Area==0){ Area1=0}
-  Area_Before[,"value"][s]=Area1
+  Area_Before=Area1
   
   Area2=Curve[mx]/2
   start2=mx+1
@@ -495,181 +695,38 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   Area2=Area2+Curve[Ed]/2
   #print (Area2)
   if (Area==0){ Area2=0}
-  Area_After[,"value"][s]=Area2
+  Area_After=Area2
   
   Asy=Area1-Area2
-  Asymmetry[,"value"][s]=Asy
+  Asymmetry=Asy
+  PVector = vector(length=15)
   
-  s=s+1
+  PVector[1] = Onset_Value
+  PVector[2] = Onset_Time
+  PVector[3] = Offset_Value
+  PVector[4] = Offset_Time
+  PVector[5] = Max_Value
+  PVector[6] = Max_Time
+  PVector[7] = Area_Total
+  PVector[8] = Area_Before
+  PVector[9] = Area_After
+  PVector[10] = (Area_Before - Area_After)
+  PVector[11] = (Max_Value - Onset_Value) / (Max_Time - Onset_Time)             # GreenUpSlope
+  PVector[12] = (Max_Value - Offset_Value) / (Offset_Time - Max_Time)           # BrownDownSlope
+  PVector[13] = Offset_Time - Onset_Time                                        # LengthGS
+  PVector[14] = Max_Time - Onset_Time                                           # BeforeMaxT
+  PVector[15] = Offset_Time - Max_Time                                          # AfterMaxT
   
-    }
-
-dir.create("Metrics")
-setwd(paste(getwd(), "Metrics", sep="/"))
-
-
-write.table(Area_Total, "TINDVI.txt")
-write.table(Area_After, "TINDVIAfterMax.txt")
-write.table(Area_Before, "TINDVIBeforeMax.txt")
-
-write.table(Max_Value, "Max_V.txt")
-write.table(Max_Time, "Max_T.txt")
-
-write.table(Offset_Value, "Offset_V.txt")
-write.table(Offset_Time, "Offset_T.txt")
-
-write.table(Onset_Value, "Onset_V.txt")
-write.table(Onset_Time, "Onset_T.txt")
-
-write.table(Asymmetry, "Asymmetry.txt")
-###===================================================================================================
-#Defining secondary metrics
-
-BeforeMaxT[,"value"]=Max_Time[,"value"]-Onset_Time[,"value"]
-write.table(BeforeMaxT, "BeforeMaxT.txt")
-
-AfterMaxT[,"value"]=Offset_Time[,"value"]-Max_Time[,"value"]
-write.table(AfterMaxT, "AfterMaxT.txt")
-
-#BrownDownSlope=Max_Time
-BrownDownSlope[,"value"]=(Max_Value[,"value"]-Offset_Value[,"value"])/(Offset_Time[,"value"]-Max_Time[,"value"])
-write.table(BrownDownSlope, "BrownDownSlope.txt")
-
-#GreenUpSlope=Max_Time
-GreenUpSlope[,"value"]=(Max_Value[,"value"]-Onset_Value[,"value"])/(Max_Time[,"value"]-Onset_Time[,"value"])
-write.table(GreenUpSlope, "GreenUpSlope.txt")
+  return(PVector) 
+}
+#===============================================================================================================
 
 
-#LengthGS=Max_Time
-LengthGS[,"value"]=(Offset_Time[,"value"]-Onset_Time[,"value"])
-write.table(LengthGS, "LengthGS.txt")
 
-#LengthGS=Max_Time
-Amplitude[,"value"]=(Max_Value[,"value"]-((Onset_Value[,"value"]+Offset_Value[,"value"])/2))
-write.table(Amplitude, "Amplitude.txt")
+#===============================================================================================================
+#                                     MultiPointsPlot Function
+#===============================================================================================================
 
-###===================================================================================================
-par(mfrow=c(2,2))
-
-names(AllP)=Hd
-write.csv(AllP, "AllPixels.txt")
-
-
-OT=rasterFromXYZ(Onset_Time)
-crs(OT)<-crs(ras)
-brk=seq(2,16, by=0.01)
-nbrk=length(brk)
-plot(OT$value, main="OnsetT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(2,16,by=2), labels=seq(2,16,by=2)), zlim=c(2,16))
-writeRaster(OT$value, "OnsetT.img", overwrite=TRUE)
-OV=rasterFromXYZ(Onset_Value)
-brk=seq(0.1,0.6, by=0.001)
-nbrk=length(brk)
-crs(OV)<-crs(ras)
-plot(OV$value, main="OnsetV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0.1,0.6,by=0.2), labels=seq(0.1,0.6,by=0.2)), zlim=c(0.1,0.6))
-writeRaster(OV$value, "OnsetV.img", overwrite=TRUE)
-
-MT=rasterFromXYZ(Max_Time)
-crs(MT)<-crs(ras)
-brk=seq(8,19, by=1)
-nbrk=length(brk)
-lblbrk=brk
-plot(MT$value, main="MaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(8,19,by=2), labels=seq(8,19,by=2)),zlim=c(8,19))
-writeRaster(MT$value, "MaxT.img", overwrite=TRUE)
-
-
-MV=rasterFromXYZ(Max_Value)
-crs(MV)<-crs(ras)
-brk=seq(0.2,1, by=0.001)
-nbrk=length(brk)
-plot(MV$value, main="MaxV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0.2,1,by=0.2), labels=seq(0.2,1,by=0.2)), zlim=c(0.2,1))
-writeRaster(MV$value, "MaxV.img", overwrite=TRUE)
-
-OFT=rasterFromXYZ(Offset_Time)
-crs(OFT)<-crs(ras)
-brk=seq(16,23, by=0.01)
-nbrk=length(brk)
-plot(OFT$value, main="OffsetT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(16,23,by=2), labels=seq(16,23,by=2)), zlim=c(16,23))
-writeRaster(OFT$value, "OffsetT.img", overwrite=TRUE)
-
-OFV=rasterFromXYZ(Offset_Value)
-crs(OFV)<-crs(ras)
-brk=seq(0,0.4, by=0.001)
-nbrk=length(brk)
-plot(OFV$value, main="OffsetV", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.4,by=0.1), labels=seq(0,0.4,by=0.1)), zlim=c(0,0.4))
-writeRaster(OFV$value, "OffsetV.img", overwrite=TRUE)
-
-GUS=rasterFromXYZ(GreenUpSlope)
-crs(GUS)<-crs(ras)
-brk=seq(0,0.25, by=0.00001)
-nbrk=length(brk)
-plot(GUS$value, main="GreenUpSlope", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.25,by=0.1), labels=seq(0,0.25,by=0.1)),zlim=c(0,0.25))
-writeRaster(GUS$value, "GreenUpSlope.img", overwrite=TRUE)
-
-BDS=rasterFromXYZ(BrownDownSlope)
-crs(BDS)<-crs(ras)
-brk=seq(0,0.25, by=0.00001)
-nbrk=length(brk)
-plot(BDS$value, main="BrownDownSlope", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,0.25,by=0.1), labels=seq(0,0.25,by=0.1)),zlim=c(0,0.25))
-writeRaster(BDS$value, "BrownDownSlope.img", overwrite=TRUE)
-
-BefMaxT=rasterFromXYZ(BeforeMaxT)
-crs(BefMaxT)<-crs(ras)
-brk=seq(0,12, by=0.01)
-nbrk=length(brk)
-plot(BefMaxT$value, main="BeforeMaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,12,by=2), labels=seq(0,12,by=2)), zlim=c(0,12))
-writeRaster(BefMaxT$value, "BeforeMaxT.img", overwrite=TRUE)
-
-AftMaxT=rasterFromXYZ(AfterMaxT)
-crs(AftMaxT)<-crs(ras)
-brk=seq(0,12, by=0.01)
-nbrk=length(brk)
-plot(AftMaxT$value, main="AfterMaxT", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,12,by=2), labels=seq(0,12,by=2)), zlim=c(0,12))
-writeRaster(AftMaxT$value, "AfterMaxT.img", overwrite=TRUE)
-
-Len=rasterFromXYZ(LengthGS)
-crs(Len)<-crs(ras)
-brk=seq(6,17, by=0.1)
-nbrk=length(brk)
-writeRaster(Len$value, "LengthGS.img", overwrite=TRUE)
-plot(Len$value, main="LengthGS", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(6,17,by=2), labels=seq(6,17,by=2)), zlim=c(6,17))
-
-AA=rasterFromXYZ(Area_After)
-crs(AA)<-crs(ras)
-brk=seq(0,6, by=0.0001)
-nbrk=length(brk)
-plot(AA$value, main="TINDVIAfterMax", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,6,by=2), labels=seq(0,6,by=2)), zlim=c(0,6))
-writeRaster(AA$value, "TINDVIAfterMax.img", overwrite=TRUE)
-
-AB=rasterFromXYZ(Area_Before)
-crs(AB)<-crs(ras)
-brk=seq(0,6, by=0.0001)
-nbrk=length(brk)
-plot(AB$value, main="TINDVIBeforeMax", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,6,by=2), labels=seq(0,6,by=2)), zlim=c(0,6))
-writeRaster(AB$value, "TINDVIBeforeMax.img", overwrite=TRUE)
-
-
-AT=rasterFromXYZ(Area_Total)
-crs(AT)<-crs(ras)
-brk=seq(0,8, by=0.001)
-nbrk=length(brk)
-plot(AT$value, main="TINDVI", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(0,8,by=2), labels=seq(0,8,by=2)), zlim=c(0,8))
-writeRaster(AT$value, "TINDVI.img", overwrite=TRUE)
-
-
-As=rasterFromXYZ(Asymmetry)
-crs(As)<-crs(ras)
-brk=seq(-6,6, by=0.0001)
-nbrk=length(brk)
-plot(As$value, main="Asymmetry", breaks=brk, col=rev(terrain.colors(nbrk)), axis.arg=list(at=seq(-6.0,6.0,by=3), labels=seq(-6.0,6.0,by=3)), zlim=c(-6,6))
-writeRaster(As$value, "Asymmetry.img", overwrite=TRUE)
-
-
-##########################====================================##########################
-
-return("*****Output file saved under <Metrics> folder under directory*****")
-
-##########################====================================##########################
-}  
 #' @export
 #' @return Multiple time series curves together at the plot panel
 #' @param path - the path whee AllPixel.txt saved
@@ -811,7 +868,9 @@ MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
     }
     
     ts.plot ((ts(as.matrix(AP[Id1,])[4:length(APP)])), (ts(as.matrix(AP[Id2,])[4:length(APP)])), (ts(as.matrix(AP[Id3,])[4:length(APP)])), (ts(as.matrix(AP[Id4,])[4:length(APP)])), (ts(as.matrix(AP[Id5,])[4:length(APP)])), ylim=c(0,1),  col=1:5)
-    axis(2, at=seq(0,1,by=0.1))
+    axis(2, at=seq(0,1,by=0.1))     
   }
   return ("..........Curves ploted............................")
 }
+
+#======================================================================================================

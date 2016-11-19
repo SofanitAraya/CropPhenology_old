@@ -53,16 +53,20 @@ This function extracts 15 phenologic metrics from time series vegetaion index da
 PhenoMetrics function provides the user with 15 phenological based metrics which build upon those available from previous software TIMESAT(Eklundh and Jönsson, 2015)  and PhenoSat  (Rodrigues et al., 2011) and include new metrics suggested by the remote sensing-agricultural based literature.  Furthermore, we have provided the theoretical biological inferences of how these metrics can be used for crop management to reduce the criticisms of the satellite imagery approach. The output allow easy interpretation as it is available in raster image format which is easy to visualize and swimmingly integrate with other data such as precision agriculture dataset, for further processing, such as analysis of regional yield estimate with the pattern of phenologic parameters.
 }
 \examples{
-# EXAMPLE - 1
+# EXAMPLE - 1 with no ROI
 
 PhenoMetrics(system.file("extdata/data1", package="CropPhenology"), FALSE, 15, TRUE)
  
-# EXAMPLE - 2
+# EXAMPLE - 2 With ROI
  
 PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
 
+# EXAMPLE - 3 for Point data
+ 
+PhenoMetrics(system.file("extdata/data3", package="CropPhenology"), TRUE)
 
 }
+
 \author{
 Sofanit Araya
 }
