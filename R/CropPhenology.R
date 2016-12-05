@@ -111,11 +111,12 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
       PhenoArray = array(dim = c(nrow(ModisCurves), 15))
       
       for (i in 1:nrow(ModisCurves)){
-        PhenoArray[i,] <- PhenoVector(ModisCurves[i,],15, FALSE)
+        PhenoArray[i,] <- SinglePhenology(ModisCurves[i,],15, FALSE)
       }
       cnames = c('x','y', 'Onset_Value','Onset_Time','Offset_Value','Offset_Time','Max_Value','Max_Time','Area_Total','Area_Before','Area_After','Asymmetry','GreenUpSlope','BrownDownSlope','LengthGS','BeforeMaxT','AfterMaxT')
       
-      PhenoDataframe = data.frame(cbind(pcor[,1:2],PhenoArray))
+      PhenoDataframe = data.frame(cbind(pcor[,1], pcor[,2],PhenoArray))
+      PointDataframe= data.frame(cbind(pcor[,1], pcor[,2], ModisCurves))
       colnames(PhenoDataframe) = cnames
       
       dir.create("Metrics")
@@ -123,6 +124,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
       getwd()
       
       write.csv(PhenoDataframe,"Pheno_table.csv")
+      write.csv(PointDataframe, "AllPixels.csv")
       
       print ("output metrics for the point data is saved at 'Metrics' folder as 'Pheno_table.csv'")
       stop()    
@@ -136,29 +138,28 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
       #imgst=stack(imageStack)
       g=array(, dim=dim(imageStack))
       #g[,,]=imageStack[,,]
-      
-      
       r=1
       for (r in 1:(dim(imageStack)[1])) {
           g[r,,]  = imageStack[r,,]
-      }        
+      }
+      
+     
+      
     
-      
-      
-      
-      
-      
-      
       #imageArray = as.array(imageStack[,,])
       PhenoArray = array(dim = c((dim(g))[1],(dim(g))[2],15))
-      
+      PtArray=array(dim = c((dim(g))[1],(dim(g))[2]))
       for ( r in 1:(dim(g))[1]) {
         for ( c in 1:(dim(g))[2]) {
           t1 <- (as.vector(g[r,c,]))
           p1=t1/10000
-          PhenoArray[r,c,] = PhenoVector(p1, Percentage, Smoothing)
+          PhenoArray[r,c,] = SinglePhenology(p1, Percentage, Smoothing)
         } 
       }
+      pts=rasterToPoints(imageStack)
+
+      
+      
       PhenoStack <- raster(PhenoArray[,,1], template = imageStack)
       for (i in 2:15) {
         PhenoStack <- stack(PhenoStack,raster(PhenoArray[,,i], template = imageStack))
@@ -174,6 +175,10 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   print(getwd())
   crs(PhenoStack)=crs(hugeStack)
   writeRaster(PhenoStack,"PhenoStack.img")
+  ppt=pts
+  d=(dim(g))[3]+2
+  pts[,3:d]=pts[,3:d]/10000
+  write.csv(pts, "AllPixels.csv")
   
   if (BolAOI == FALSE){
     ra=raster(raDir[1])    
@@ -189,7 +194,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     for ( r in 1:dim(imageArray)[1]) {
       for ( c in 1:dim(imageArray)[2]) {
         p1 <- as.vector(imageArray[r,c,])
-        PhenoArray[r,c,] = PhenoVector(p1,Percentage, Smoothing)
+        PhenoArray[r,c,] = SinglePhenology(p1,Percentage, Smoothing)
       } 
     }
     PhenoStack <- raster(PhenoArray[,,1], template = imageStack)
@@ -357,11 +362,18 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
 
 
 #===============================================================================================================
-#                                     PhenoVector Function
+#                                     SinglePhenology Function
 #===============================================================================================================
-# PhenoVector - calculates phenologic metrics for each pixel and return to the PhenoMetrics function 
-
-PhenoVector <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
+# SinglePhenology - calculates phenologic metrics for each pixel and return to the PhenoMetrics function 
+#' @export
+#' @return return phenologic metrics for a single pixel
+#' @title Phenology plot per pixel
+#' @name SinglePhenology#' 
+#' @param AnnualTS- annual time series
+#' @param Percentage - the percentage threshold for Onset and Offset
+#' @param Smoothing - moving average smoothing applied if TRUE
+#' 
+SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
   #
   if(sum(is.na(AnnualTS)) > 0) {
     PVector = rep(NA,15)
@@ -756,7 +768,7 @@ PhenoVector <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
 MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
   #AP=read.table("Allpixels.txt")
   setwd(path)
-  AP=read.table("AllPixels.txt", header=TRUE, sep=",", strip.white = TRUE)
+  AP=read.table("AllPixels.csv", header=TRUE, sep=",", strip.white = TRUE)
   APP=as.matrix(AP[Id1,])
   #print (APP)
   par(mfrow=c(1,1))
