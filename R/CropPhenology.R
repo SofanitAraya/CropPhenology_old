@@ -368,7 +368,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
 #' @export
 #' @return return phenologic metrics for a single pixel
 #' @title Phenology plot per pixel
-#' @name SinglePhenology 
+#' @name SinglePhenology#' 
 #' @param AnnualTS- annual time series
 #' @param Percentage - the percentage threshold for Onset and Offset
 #' @param Smoothing - moving average smoothing applied if TRUE
