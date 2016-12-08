@@ -772,7 +772,8 @@ MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
   #AP=read.table("Allpixels.txt")
   setwd(path)
   AP=read.table("AllPixels.csv", header=TRUE, sep=",", strip.white = TRUE)
-  APP=as.matrix(AP[Id1,])
+  APP=as.numeric(unlist(AP[Id1,]))
+  
   #print (APP)
   par(mfrow=c(1,1))
   
@@ -788,7 +789,7 @@ MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
     if (missing (Id1) | missing(Id2) | missing (Id3) | missing (Id4) | missing (Id5)){
       stop('Id missed')
     }
-    ts.plot((ts(as.matrix(AP[Id1,])[4:length(APP)])), (ts(as.matrix(AP[Id2,])[4:length(APP)])), (ts(as.matrix(AP[Id3,])[4:length(APP)])), (ts(as.matrix(AP[Id4,])[4:length(APP)])), (ts(as.matrix(AP[Id5,])[4:length(APP)])),  ylim=c(0,1), , col=1:5)
+    ts.plot((ts(as.matrix(as.numeric(unlist(AP[Id1,]))[4:length(APP)]))), (ts(as.matrix(as.numeric(unlist(AP[Id2,]))[4:length(APP)]))), (ts(as.matrix(as.numeric(unlist(AP[Id3,]))[4:length(APP)]))), (ts(as.matrix(as.numeric(unlist(AP[Id4,]))[4:length(APP)]))), (ts(as.matrix(AP[Id5,])[4:length(APP)])),  ylim=c(0,1), col=1:5)
     axis(2, at=seq(0,1,by=0.1))
     
   }
@@ -822,12 +823,12 @@ MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
       stop ('ID should be numeric')
     }
     
-    
+
     if ((Id1>length(AP$T1)) || (Id2>length(AP$T1))){
       stop ('Id out of range')
     }
     
-    ts.plot ((ts(as.matrix(AP[Id1,])[4:length(APP)])), (ts(as.matrix(AP[Id2,])[4:length(APP)])), ylim=c(0,1), col=1:2)
+    ts.plot((ts(as.matrix(as.numeric(unlist(AP[Id1,]))[4:length(APP)]))), (ts(as.matrix(as.numeric(unlist(AP[Id2,]))[4:length(APP)]))), ylim=c(0,1), col=1:2)
     axis(2,  at=seq(0,1,by=0.1))
   }
   if (N==3){
@@ -845,7 +846,7 @@ MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
       stop ('Id out of range')
     }
     
-    ts.plot ((ts(as.matrix(AP[Id1,])[4:length(APP)])), (ts(as.matrix(AP[Id2,])[4:length(APP)])), (ts(as.matrix(AP[Id3,])[4:length(APP)])), ylim=c(0,1), col=1:3)
+    ts.plot((ts(as.matrix(as.numeric(unlist(AP[Id1,]))[4:length(APP)]))), (ts(as.matrix(as.numeric(unlist(AP[Id2,]))[4:length(APP)]))),(ts(as.matrix(as.numeric(unlist(AP[Id3,]))[4:length(APP)]))), ylim=c(0,1), col=1:3)    
     axis(2,  at=seq(0,1,by=0.1))
   }
   
@@ -864,7 +865,7 @@ MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
       stop ('Id out of range')
     }
     
-    ts.plot ((ts(as.matrix(AP[Id1,])[4:length(APP)])), (ts(as.matrix(AP[Id2,])[4:length(APP)])), (ts(as.matrix(AP[Id3,])[4:length(APP)])), (ts(as.matrix(AP[Id4,])[4:length(APP)])),  ylim=c(0,1), col=1:4)
+    ts.plot((ts(as.matrix(as.numeric(unlist(AP[Id1,]))[4:length(APP)]))), (ts(as.matrix(as.numeric(unlist(AP[Id2,]))[4:length(APP)]))),(ts(as.matrix(as.numeric(unlist(AP[Id3,]))[4:length(APP)]))), (ts(as.matrix(as.numeric(unlist(AP[Id4,]))[4:length(APP)]))), ylim=c(0,1), col=1:3)    
     axis(2, at=seq(0,1,by=0.1))
   }
   if (N==5){
@@ -882,7 +883,7 @@ MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
       stop ('Id out of range')
     }
     
-    ts.plot ((ts(as.matrix(AP[Id1,])[4:length(APP)])), (ts(as.matrix(AP[Id2,])[4:length(APP)])), (ts(as.matrix(AP[Id3,])[4:length(APP)])), (ts(as.matrix(AP[Id4,])[4:length(APP)])), (ts(as.matrix(AP[Id5,])[4:length(APP)])), ylim=c(0,1),  col=1:5)
+    ts.plot((ts(as.matrix(as.numeric(unlist(AP[Id1,]))[4:length(APP)]))), (ts(as.matrix(as.numeric(unlist(AP[Id2,]))[4:length(APP)]))),(ts(as.matrix(as.numeric(unlist(AP[Id3,]))[4:length(APP)]))), (ts(as.matrix(as.numeric(unlist(AP[Id4,]))[4:length(APP)]))),(ts(as.matrix(as.numeric(unlist(AP[Id5,]))[4:length(APP)]))), ylim=c(0,1), col=1:3)    
     axis(2, at=seq(0,1,by=0.1))     
   }
   return ("..........Curves ploted............................")
