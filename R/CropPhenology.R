@@ -842,7 +842,7 @@ MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
     }
     
     
-    if ((Id1>length(AP$T1)) || (Id2>length(AP$T1)) || (Id3>length(AP$T1))){
+    if ((Id1>dim(AP)[1]) || (Id2>dim(AP)[1]) || (Id3>dim(AP)[1])){
       stop ('Id out of range')
     }
     
@@ -861,7 +861,7 @@ MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
     }
     
     
-    if ((Id1>length(AP$T1)) || (Id2>length(AP$T1)) || (Id3>length(AP$T1)) || (Id4>length(AP$T1))){
+    if ((Id1>dim(AP)[1]) || (Id2>dim(AP)[1]) || (Id3>dim(AP)[1])|| (Id4>dim(AP)[1])){
       stop ('Id out of range')
     }
     
@@ -877,9 +877,8 @@ MultiPointsPlot<- function (path, N,Id1,Id2,Id3,Id4,Id5){
     if ((is.numeric(Id1)==FALSE) || (is.numeric(Id2)==FALSE) || (is.numeric(Id3)==FALSE) || (is.numeric(Id4)==FALSE) || (is.numeric(Id5)==FALSE) ){
       stop ('ID should be numeric')
     }
-    
-    
-    if ((Id1>length(AP$T1)) || (Id2>length(AP$T1)) || (Id3>length(AP$T1)) || (Id4>length(AP$T1)) || (Id5>length(AP$T1)) ){
+
+    if ((Id1>dim(AP)[1]) || (Id2>dim(AP)[1]) || (Id3>dim(AP)[1])|| (Id4>dim(AP)[1]) || (Id5>dim(AP)[1])){
       stop ('Id out of range')
     }
     
