@@ -134,13 +134,22 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     }
     
     if (class(shp)=="SpatialPolygonsDataFrame"){
+      #temp=raDir[1]
+      #shp = readOGR(Path,"Bon")
       tmpstack = crop(hugeStack,shp)
       imageStack = mask(tmpstack,shp)
+      #imgst=stack(imageStack)
       g=array(, dim=dim(imageStack))
+      #g[,,]=imageStack[,,]
       r=1
       for (r in 1:(dim(imageStack)[1])) {
           g[r,,]  = imageStack[r,,]
       }
+      
+     
+      
+    
+      #imageArray = as.array(imageStack[,,])
       PhenoArray = array(dim = c((dim(g))[1],(dim(g))[2],15))
       PtArray=array(dim = c((dim(g))[1],(dim(g))[2]))
       for ( r in 1:(dim(g))[1]) {
@@ -151,6 +160,9 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
         } 
       }
       pts=rasterToPoints(imageStack)
+
+      
+      
       PhenoStack <- raster(PhenoArray[,,1], template = imageStack)
       for (i in 2:15) {
         PhenoStack <- stack(PhenoStack,raster(PhenoArray[,,i], template = imageStack))
@@ -176,6 +188,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     Points=rasterToPoints(ra)
     shp=rasterToPolygons((ra*0), dissolve=TRUE)
     temp=raDir[1]
+    #    shp = readOGR(Path,"Bon")
     tmpstack = crop(hugeStack,shp)
     imageStack = mask(tmpstack,shp)
     imageArray <- as.array(imageStack)
@@ -210,10 +223,25 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   for (i in 1:nrow(coords)){
     plot(coords[i,3:ncol(coords)])
   }
+  #===========================================
+  #Writing the txt at Metrics
+  
+  #dir.create("Metrics")
+  #setwd(paste(getwd(), "Metrics", sep="/"))
+  
+  # extracts all temporal values for all pixels
+ # write.table(coords, "AllPixels.txt")
 
-#===================================================================================================
+  ###===================================================================================================
   
   par(mfrow=c(2,2))
+  
+  #names(AllP)=Hd
+  
+  #write.csv(AllP, "AllPixels.txt")
+  
+#  PhenoStack
+  
   OT=PhenoStack$Onset_Time
   crs(OT)<-crs(shp)
   brk=seq(2,16, by=0.01)
@@ -368,9 +396,15 @@ SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
     sq=sq+1
   }
   SmthTS[ll]=AnnualTS[ll]
+  #    print (AnnualTS)
+  #    print (SmthTS)
   aas=ts(AnnualTS)
   ssm=ts(SmthTS)
-
+  #    ts.plot(ssm, aas, col=1:2)
+  #=========================================
+  
+  #   print (AnnualTS)
+  
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   #                                                 Choose smooth or unsmooth
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -443,7 +477,15 @@ SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
     last=slopon[i]
   }
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+  #    print (slopon)
+  #    print(ls)
+  #    print (Max_T)
+  #    print(max)
+  #    print(range1)
+  #   print(range2)
+  
+  
+  
   if (ls==0){ #if only the growing season is presented and only increasing
     k=1
     Checked= FALSE
@@ -498,6 +540,10 @@ SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
   }
   
   onsetTF=onsetT
+  #print (onsetV)
+  #print(onsetT)
+  
+  
   Onset_Value=onsetV
   Onset_Time=onsetTF
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -516,6 +562,10 @@ SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
     z=z+1
     y=y+1
   }
+  
+  #print (slopof)
+  #print(range2)
+  
   lenof=length(slopof)
   lastof=slopof[lenof]
   
@@ -526,7 +576,9 @@ SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
   
   while(i<lenof+1){
     if (lastof>(-0.01)){
+      #print(last)
       if (lastof> (-0.01)){
+        #print(last)
         lsof=i
         break
       }
@@ -591,6 +643,11 @@ SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
     offsetT=length(Curve)
     offsetV=Curve[offsetT]
   }
+  
+  #print (lsof)
+  
+  #print (offsetV)
+  #print(offsetT)
   offsetTF=offsetT
   
   Offset_Value=offsetV
@@ -624,7 +681,11 @@ SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
     Area=Area+Curve[start]
     start=start+1
   }
+  #print (Area)
+  
   Area_Total=Area
+  
+  
   start1=St
   Area1=Curve[start1]/2
   start1=start1+1
@@ -633,6 +694,9 @@ SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
     start1=start1+1
   }
   Area1=Area1+(Curve[mx]/2)
+  
+  #print(onsetT)
+  #print (Area1)
   if (onsetT==0){ Area1=0}
   if (Area==0){ Area1=0}
   Area_Before=Area1
@@ -644,6 +708,7 @@ SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
     start2=start2+1
   }
   Area2=Area2+Curve[Ed]/2
+  #print (Area2)
   if (Area==0){ Area2=0}
   Area_After=Area2
   
