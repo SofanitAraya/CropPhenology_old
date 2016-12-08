@@ -46,7 +46,10 @@
 #' PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
 #' 
 #' 
-
+#' # EXAMPLE - 3
+#'  
+#' PhenoMetrics(system.file("extdata/data3", package="CropPhenology"), TRUE)
+#' 
 PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   require('shapefiles')
   require("maptools")
