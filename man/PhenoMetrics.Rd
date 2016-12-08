@@ -61,8 +61,22 @@ PhenoMetrics(system.file("extdata/data1", package="CropPhenology"), FALSE, 15, T
  
 PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
 
+}
+=======
+# EXAMPLE - 1 with no ROI
+
+PhenoMetrics(system.file("extdata/data1", package="CropPhenology"), FALSE, 15, TRUE)
+ 
+# EXAMPLE - 2 With ROI
+ 
+PhenoMetrics(system.file("extdata/data2", package="CropPhenology"), TRUE)
+
+# EXAMPLE - 3 for Point data
+ 
+PhenoMetrics(system.file("extdata/data3", package="CropPhenology"), TRUE)
 
 }
+
 \author{
 Sofanit Araya
 }
