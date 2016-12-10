@@ -170,7 +170,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
       names(PhenoStack) = c('Onset_Value','Onset_Time','Offset_Value','Offset_Time','Max_Value','Max_Time','TINDVI','Area_Before','Area_After','Asymmetry','GreenUpSlope','BrownDownSlope','LengthGS','BeforeMaxT','AfterMaxT')
     }
     
-  }
+  
 
   dir.create("Metrics")
   setwd(paste(getwd(), "Metrics", sep="/"))
@@ -182,7 +182,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   d=(dim(g))[3]+2
   pts[,3:d]=pts[,3:d]/10000
   write.csv(pts, "AllPixels.csv")
-  
+  }
   if (BolAOI == FALSE){
     ra=raster(raDir[1])    
     Points=rasterToPoints(ra)
