@@ -135,7 +135,7 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
     
     if (class(shp)=="SpatialPolygonsDataFrame"){
       crs(shp)= crs(hugeStack)
-      extent(shp)=extent(hugeStack)
+      #extent(shp)=extent(hugeStack)
       #temp=raDir[1]
       #shp = readOGR(Path,"Bon")
       tmpstack = crop(hugeStack,shp)
