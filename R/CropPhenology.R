@@ -450,10 +450,10 @@ SinglePhenology <- function(AnnualTS, Percentage = 10, Smoothing = FALSE) {
     f=f+1
   }
   ratio=Percentage/100
-  min1=max(Curve)
-  min2=max(Curve)
-  #min1=min (Curve[1:Max_T])
-  #min2=min(Curve[Max_T:(FileLen-1)])
+  #min1=max(Curve)
+  #min2=max(Curve)
+  min1=min (Curve[1:Max_T])
+  min2=min(Curve[Max_T:(FileLen-1)])
   range1=min1+(ratio*min1) #to get 10% of the min before Max
   range2=min2+(ratio*min2)#to get 10% of the min after Max
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
