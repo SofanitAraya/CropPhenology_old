@@ -219,9 +219,9 @@ PhenoMetrics<- function (Path, BolAOI, Percentage, Smoothing){
   nrow(coords)  
   # MODIS time series of pixel 1
   p1 <- coords[1,3:ncol(coords)]
-  for (i in 1:nrow(coords)){
-    plot(coords[i,3:ncol(coords)])
-  }
+#  for (i in 1:nrow(coords)){
+ #   plot(coords[i,3:ncol(coords)])
+  #}
   #===========================================
   #Writing the txt at Metrics
   
