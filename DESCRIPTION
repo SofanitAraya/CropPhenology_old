@@ -3,7 +3,7 @@ Type: Package
 Title: Extract phenologic metrics from timeseries vegetation index data
 Version: 1.0
 Date: 2016-20-04
-Author: Sofanit Araya
+Author: Sofanit Araya, Bertram Ostendorf, Greg Lyle, Megan Lewis
 Maintainer: Sofanit Araya <sofanitgirma.araya@adelaide.edu.au>
 Description: CropPhenology-package
 License: GPL (>=2)
